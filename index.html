@@ -2,228 +2,182 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JARVIS AI - Final Control Center</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JARVIS MOBILE READY</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        :root { --primary: #00f2fe; --secondary: #4facfe; --bg-dark: #0a0e17; }
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: radial-gradient(circle at center, #141e30, #0a0e17);
-            color: #e2e8f0; display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; margin: 0; padding-bottom: 50px;
+        :root { --neon: #00f2fe; --bg: #0f172a; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; 
+            margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;
+            height: 100vh; justify-content: center;
         }
         .container {
-            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px);
-            padding: 20px; border-radius: 24px; width: 92%; max-width: 500px;
-            text-align: center; border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            background: rgba(30, 41, 59, 0.9); padding: 25px; border-radius: 30px;
+            width: 100%; max-width: 400px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155;
         }
-        h2 { margin: 10px 0; color: var(--primary); text-shadow: 0 0 10px rgba(0,242,254,0.5); }
-        
         input, select {
-            width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5);
-            color: white; text-align: center; font-size: 0.9rem;
+            width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px;
+            background: #1e293b; color: white; border: 1px solid #475569; font-size: 1rem;
         }
-
-        .btn-group { display: flex; gap: 8px; margin-bottom: 15px; }
-        .action-btn {
-            flex: 1; padding: 12px; border-radius: 12px; border: none; cursor: pointer;
-            font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; gap: 5px;
-        }
-        .btn-blue { background: #2563eb; } .btn-orange { background: #f59e0b; }
-        .btn-red { background: #ef4444; font-size: 0.8rem; }
-
-        .mic-wrapper { position: relative; width: 85px; height: 85px; margin: 15px auto; }
         .mic-btn {
-            width: 100%; height: 100%; border-radius: 50%; border: none;
-            background: #ef4444; color: white; font-size: 40px; cursor: pointer;
-            z-index: 2; position: relative; transition: 0.3s;
+            width: 100px; height: 100px; border-radius: 50%; border: none;
+            background: #ef4444; color: white; font-size: 45px; cursor: pointer;
+            margin: 20px 0; transition: 0.3s;
         }
-        .mic-btn.listening { background: #22c55e; box-shadow: 0 0 25px #22c55e; }
-
-        #visualizer {
-            display: flex; justify-content: center; gap: 4px; height: 25px; margin-bottom: 10px; opacity: 0;
+        .mic-btn.active {
+            background: #22c55e; box-shadow: 0 0 30px rgba(34, 197, 94, 0.6);
+            transform: scale(1.1);
         }
-        #visualizer.active { opacity: 1; }
-        .bar { width: 4px; background: var(--primary); animation: bounce 1s infinite; }
-        @keyframes bounce { 0%, 100% { height: 5px; } 50% { height: 20px; } }
-
-        #chat-log { 
-            text-align: left; max-height: 250px; overflow-y: auto; 
-            border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; 
+        #status { font-weight: bold; color: var(--neon); margin-bottom: 10px; height: 20px; }
+        #chat-box { 
+            text-align: left; max-height: 150px; overflow-y: auto; 
+            font-size: 0.9rem; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;
         }
-        .msg { padding: 10px; margin-bottom: 8px; border-radius: 12px; font-size: 0.9rem; }
-        .user { background: rgba(59, 130, 246, 0.2); text-align: right; }
-        .ai { background: rgba(255, 255, 255, 0.05); }
-        .iot { background: #f59e0b; color: black; font-weight: bold; font-size: 0.75rem; text-align: center; }
-
-        .terminal {
-            background: #000; color: #00ff00; font-family: monospace; 
-            font-size: 11px; padding: 10px; border-radius: 8px; margin-top: 15px;
-            height: 100px; overflow-y: auto; text-align: left; border: 1px solid #333;
+        .btn-init {
+            background: #f59e0b; color: white; border: none; padding: 15px;
+            border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer;
+            margin-bottom: 15px; text-transform: uppercase;
         }
     </style>
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
 
 <div class="container">
-    <h2>⚡ JARVIS PRO</h2>
-    
-    <input type="password" id="apiKey" placeholder="Gemini API Key">
-    
-    <div class="btn-group">
-        <button class="action-btn btn-blue" onclick="listModels()">Modeller</button>
-        <button class="action-btn btn-orange" id="voiceInitBtn">SESİ AKTİF ET</button>
-    </div>
+    <h2>JARVIS PRO</h2>
+    <div id="status">Bekleniyor...</div>
 
-    <select id="voiceSelect"><option>Sesleri Tara...</option></select>
+    <input type="password" id="apiKey" placeholder="Gemini API Key Girin">
     
-    <div id="visualizer">
-        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-    </div>
-
-    <div class="mic-wrapper">
-        <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
-    </div>
-
-    <div id="status">Hazır.</div>
-
-    <div class="terminal" id="term">Sistem Başlatılıyor...</div>
+    <button class="btn-init" id="initBtn">1. Sistemi ve Sesi Başlat</button>
     
-    <div id="chat-log"></div>
+    <select id="voiceSelect"><option>Ses Bekleniyor...</option></select>
+
+    <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
+
+    <div id="chat-box">Sohbet burada görünecek...</div>
 </div>
 
 <script>
-    // --- 1. FIREBASE CONFIG (BURAYI KENDİ BİLGİLERİNLE DOLDUR) ---
-    const firebaseConfig = {
-        apiKey: "BURAYA_API_KEY",
-        databaseURL: "BURAYA_URL",
-        projectId: "PROJE_ID"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const apiKeyInput = document.getElementById('apiKey');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const micBtn = document.getElementById('micBtn');
+    const statusText = document.getElementById('status');
+    const chatBox = document.getElementById('chat-box');
+    const initBtn = document.getElementById('initBtn');
 
-    // --- 2. SES MOTORU (ANDROID & iOS FIX) ---
     const synth = window.speechSynthesis;
     let voices = [];
 
-    function initVoices() {
+    // --- SESLERİ YÜKLE (MOBİL UYUMLU) ---
+    function loadVoices() {
         voices = synth.getVoices();
-        const vs = document.getElementById('voiceSelect');
-        vs.innerHTML = "";
+        voiceSelect.innerHTML = "";
         
-        // Türkçe sesleri bul ve başa koy
-        const tr = voices.filter(v => v.lang.includes('tr'));
-        const others = voices.filter(v => !v.lang.includes('tr'));
-        const all = [...tr, ...others];
-
-        all.forEach(v => {
+        // Sadece Türkçe sesleri ayır
+        const trVoices = voices.filter(v => v.lang.includes('tr') || v.lang.includes('TR'));
+        
+        if (trVoices.length > 0) {
+            trVoices.forEach(v => {
+                let opt = document.createElement('option');
+                opt.value = v.name;
+                opt.text = "🇹🇷 " + v.name;
+                voiceSelect.appendChild(opt);
+            });
+        } else {
             let opt = document.createElement('option');
-            opt.value = v.name;
-            opt.text = (v.lang.includes('tr') ? "🇹🇷 " : "") + v.name;
-            vs.appendChild(opt);
-        });
-        logTerm("Sesler yüklendi: " + voices.length);
+            opt.text = "Varsayılan Türkçe Sesi";
+            voiceSelect.appendChild(opt);
+        }
+        statusText.innerText = "Sistem ve Sesler Hazır";
     }
 
-    document.getElementById('voiceInitBtn').onclick = () => {
-        initVoices();
-        const u = new SpeechSynthesisUtterance("Ses motoru aktif");
-        u.lang = 'tr-TR';
-        u.volume = 0; // Android'de motoru uyandırmak için sessiz çal
-        synth.speak(u);
+    // Mobilde kullanıcı etkileşimi olmadan ses çalışmaz!
+    initBtn.onclick = () => {
+        loadVoices();
+        const welcome = new SpeechSynthesisUtterance("Sistem başlatıldı, sizi dinliyorum.");
+        welcome.lang = 'tr-TR';
+        synth.speak(welcome);
+        initBtn.style.display = "none"; // Başladıktan sonra butonu gizle
     };
 
     if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = initVoices;
+        speechSynthesis.onvoiceschanged = loadVoices;
     }
 
     function speak(text) {
         if (synth.speaking) synth.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        const selected = document.getElementById('voiceSelect').value;
-        const v = voices.find(v => v.name === selected);
-        if(v) u.voice = v;
-        u.lang = 'tr-TR';
+        const utterance = new SpeechSynthesisUtterance(text);
         
-        u.onstart = () => document.getElementById('visualizer').classList.add('active');
-        u.onend = () => document.getElementById('visualizer').classList.remove('active');
+        const selectedVoice = voices.find(v => v.name === voiceSelect.value);
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            utterance.lang = selectedVoice.lang;
+        } else {
+            utterance.lang = 'tr-TR';
+        }
         
-        synth.speak(u);
+        utterance.onstart = () => statusText.innerText = "Jarvis Konuşuyor...";
+        utterance.onend = () => statusText.innerText = "Hazır";
+        
+        synth.speak(utterance);
     }
 
-    // --- 3. MİKROFON VE GEMINI ---
-    const micBtn = document.getElementById('micBtn');
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    // --- MİKROFON (STT) ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
     recognition.lang = 'tr-TR';
+    recognition.interimResults = false;
 
-    micBtn.onclick = () => { recognition.start(); };
-    recognition.onstart = () => { micBtn.classList.add('listening'); document.getElementById('status').innerText="Dinliyorum..."; };
-    recognition.onend = () => { micBtn.classList.remove('listening'); document.getElementById('status').innerText="Hazır."; };
-
-    recognition.onresult = async (event) => {
-        const text = event.results[0][0].transcript;
-        addChat(text, "user");
-        
-        const response = await askGemini(text);
-        if(response) {
-            handleIoT(response); // IoT komutlarını ayıkla
-            let cleanMsg = response.replace(/\[.*?\]/g, ""); // Kodları metinden temizle
-            addChat(cleanMsg, "ai");
-            speak(cleanMsg);
+    micBtn.onclick = () => {
+        try {
+            recognition.start();
+        } catch(e) {
+            console.log("Zaten dinliyor");
         }
     };
 
+    recognition.onstart = () => {
+        micBtn.classList.add('active');
+        statusText.innerText = "Dinliyorum...";
+    };
+
+    recognition.onend = () => {
+        micBtn.classList.remove('active');
+        statusText.innerText = "Düşünüyorum...";
+    };
+
+    recognition.onresult = async (event) => {
+        const text = event.results[0][0].transcript;
+        chatBox.innerHTML = `<b>Siz:</b> ${text}<br>` + chatBox.innerHTML;
+        
+        const response = await askGemini(text);
+        if (response) {
+            chatBox.innerHTML = `<b>Jarvis:</b> ${response}<br>` + chatBox.innerHTML;
+            speak(response);
+        }
+    };
+
+    // --- GEMINI BAĞLANTISI ---
     async function askGemini(prompt) {
-        const key = document.getElementById('apiKey').value;
-        const sys = "Sen Jarvis'sin. Işık için [LED:AC] veya [LED:KAPAT], TV için [TV:POWER], ses için [TV:SES:5] kodlarını ekle. Çok kısa cevap ver.";
+        const key = apiKeyInput.value.trim();
+        if(!key) { alert("Lütfen API Key girin!"); return; }
+
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ contents: [{role:"user", parts:[{text:sys}]}, {role:"user", parts:[{text:prompt}]}] })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: "Sen kısa ve öz cevap veren zeki bir asistansın. Soru: " + prompt }] }]
+                })
             });
             const data = await res.json();
             return data.candidates[0].content.parts[0].text;
-        } catch(e) { return "Bağlantı hatası."; }
-    }
-
-    // --- 4. IOT KOMUT İŞLEYİCİ ---
-    function handleIoT(text) {
-        if (text.includes("[LED:AC]")) db.ref('durum').set(1), logTerm("Işık AÇILDI");
-        if (text.includes("[LED:KAPAT]")) db.ref('durum').set(0), logTerm("Işık KAPATILDI");
-        if (text.includes("[TV:POWER]")) db.ref('tv_komut').set("POWER"), logTerm("TV Güç Sinyali");
-        
-        // Ses Ayarı Yakalayıcı
-        let sesMatch = text.match(/\[TV:SES:(\d+)\]/);
-        if (sesMatch) {
-            let miktar = sesMatch[1];
-            db.ref('tv_komut').set("SES_AC:" + miktar);
-            logTerm("TV Ses +" + miktar);
+        } catch (error) {
+            chatBox.innerHTML = `<span style="color:red">Hata: API Key yanlış veya internet yok.</span><br>` + chatBox.innerHTML;
+            return null;
         }
-    }
-
-    // --- 5. YARDIMCI FONKSİYONLAR ---
-    function addChat(text, type) {
-        const d = document.createElement('div');
-        d.className = "msg " + type; d.innerText = text;
-        document.getElementById('chat-log').prepend(d);
-    }
-
-    function logTerm(msg) {
-        const t = document.getElementById('term');
-        t.innerHTML = `> ${msg}<br>` + t.innerHTML;
-        console.log(msg);
-    }
-
-    function listModels() {
-        document.getElementById('status').innerText = "Modeller hazır.";
-        logTerm("Gemini 1.5 Flash Aktif.");
     }
 </script>
 </body>
