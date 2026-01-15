@@ -3,177 +3,304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesli Asistan (Ses Düzeltildi)</title>
+    <title>Jarvis AI Asistan (Pro Sürüm)</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0f172a; color: #f1f5f9; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background-color: #1e293b; padding: 2rem; border-radius: 16px; width: 90%; max-width: 500px; text-align: center; border: 1px solid #334155; margin-top: 20px; }
+        :root {
+            --primary: #00f2fe; /* Neon Mavi */
+            --secondary: #4facfe; /* Açık Mavi */
+            --bg-dark: #0a0e17; /* Çok koyu arka plan */
+            --panel-bg: rgba(30, 41, 59, 0.7); /* Yarı saydam panel */
+            --neon-shadow: 0 0 15px rgba(0, 242, 254, 0.5), 0 0 30px rgba(0, 242, 254, 0.3);
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: radial-gradient(circle at top right, #1a2a6c, #0a0e17);
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Arka Plan Deseni (Devre Kartı Hissi) */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(10, 14, 23, 0.9), rgba(10, 14, 23, 0.9)),
+                url('https://www.transparenttextures.com/patterns/circuit-board.png');
+            z-index: -1;
+        }
+
+        .container {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px); /* Buzlu cam efekti */
+            -webkit-backdrop-filter: blur(12px);
+            padding: 2.5rem;
+            border-radius: 24px;
+            width: 85%;
+            max-width: 550px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            margin-top: 30px;
+        }
+
+        h1 {
+            font-weight: 700; color: white; margin-bottom: 25px;
+            text-shadow: var(--neon-shadow); letter-spacing: 1px;
+        }
+
+        /* Giriş Alanları ve Butonlar */
+        .input-group { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
         
-        input, select { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #475569; background: #334155; color: white; text-align: center; }
-        button.scan-btn { background: #f59e0b; color: #fff; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; }
+        input, select {
+            padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 1rem;
+            transition: 0.3s; outline: none;
+        }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary); }
         
-        .mic-btn { background: #ef4444; color: white; border: none; width: 80px; height: 80px; border-radius: 50%; font-size: 32px; cursor: pointer; margin: 20px auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(239,68,68,0.5); }
-        .mic-btn.listening { background: #22c55e; animation: pulse 1.5s infinite; }
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #000; border: none; padding: 14px; border-radius: 12px;
+            font-weight: 800; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .action-btn:hover { transform: translateY(-3px); box-shadow: var(--neon-shadow); color: white; }
+
+        /* --- MİKROFON BUTONU VE ANİMASYONU --- */
+        .mic-wrapper { position: relative; width: 100px; height: 100px; margin: 20px auto; }
         
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 100% { box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); } }
+        .mic-btn {
+            background: linear-gradient(145deg, #ef4444, #b91c1c); /* Kırmızı (Pasif) */
+            color: white; border: none; width: 100%; height: 100%;
+            border-radius: 50%; cursor: pointer; position: relative; z-index: 2;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.4); transition: 0.3s;
+        }
+        .mic-btn i { font-size: 48px; }
+
+        /* Dinleme Modu (Yeşil & Dalga Efekti) */
+        .mic-btn.listening { background: linear-gradient(145deg, #22c55e, #16a34a); }
         
-        #status { color: #94a3b8; font-style: italic; margin-bottom: 10px; }
-        #chat-log { text-align: left; max-height: 300px; overflow-y: auto; border-top: 1px solid #334155; padding-top: 10px; }
-        .msg { padding: 10px; margin-bottom: 5px; border-radius: 8px; }
-        .user { background: #334155; color: #bae6fd; align-self: flex-end; }
-        .ai { background: #020617; color: #e2e8f0; border: 1px solid #1e293b; }
+        .ripple {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 50%; background: rgba(34, 197, 94, 0.6);
+            opacity: 0; z-index: 1;
+        }
+        .listening .ripple { animation: ripple-anim 2s infinite; }
+        .listening .ripple:nth-child(2) { animation-delay: 0.6s; }
+
+        @keyframes ripple-anim {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+
+        /* --- KONUŞMA ANİMASYONU (VISUALIZER) --- */
+        #visualizer {
+            display: flex; justify-content: center; align-items: center;
+            height: 40px; margin-bottom: 20px; gap: 5px; opacity: 0; transition: 0.3s;
+        }
+        #visualizer.active { opacity: 1; }
+        .bar {
+            width: 6px; height: 100%; background: var(--primary);
+            border-radius: 3px; animation: equalize 1s infinite ease-in-out;
+            box-shadow: 0 0 10px var(--primary);
+        }
+        .bar:nth-child(1) { animation-delay: -0.4s; }
+        .bar:nth-child(2) { animation-delay: -0.2s; }
+        .bar:nth-child(3) { animation-delay: 0s; }
+        .bar:nth-child(4) { animation-delay: -0.3s; }
+        .bar:nth-child(5) { animation-delay: -0.1s; }
+        
+        @keyframes equalize {
+            0%, 100% { height: 10%; }
+            50% { height: 100%; }
+        }
+
+        /* Sohbet Geçmişi */
+        #chat-log {
+            text-align: left; max-height: 300px; overflow-y: auto;
+            border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;
+        }
+        .msg { padding: 12px 18px; margin-bottom: 10px; border-radius: 16px; line-height: 1.5; }
+        .user { background: rgba(59, 130, 246, 0.2); color: #93c5fd; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .ai { background: rgba(30, 41, 59, 0.5); color: #e2e8f0; border-bottom-left-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🔊 Sesli Asistan (Final)</h2>
+    <h1><i class="material-icons-round" style="vertical-align: middle;">smart_toy</i> JARVIS AI</h1>
     
-    <input type="password" id="apiKey" placeholder="1. API Anahtarını Buraya Yapıştır">
-    <button class="scan-btn" onclick="listModels()">2. Modelleri Getir</button>
-    <select id="modelSelect"><option>Önce Modelleri Getir...</option></select>
-
-    <div style="margin: 10px 0; font-size: 0.9rem; color: #aaa;">
-        Ses Durumu: <span id="voiceStatus">Bekleniyor...</span>
+    <div class="input-group">
+        <input type="password" id="apiKey" placeholder="1. API Anahtarını Buraya Yapıştır">
+        
+        <div style="display: flex; gap: 10px;">
+            <button class="action-btn" onclick="listModels()" style="flex: 1;">
+                <i class="material-icons-round">settings_suggest</i> Modelleri Getir
+            </button>
+            <button class="action-btn" onclick="loadVoices()" style="flex: 1; background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="material-icons-round">record_voice_over</i> Sesleri Tara
+            </button>
+        </div>
+        
+        <select id="modelSelect"><option>Önce 'Modelleri Getir'e bas...</option></select>
+        <select id="voiceSelect"><option>Önce 'Sesleri Tara'ya bas...</option></select>
     </div>
 
-    <button id="micBtn" class="mic-btn">🎙️</button>
-    <div id="status">Hazır.</div>
+    <div id="visualizer">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+
+    <div id="status" style="color: #94a3b8; font-style: italic; margin-bottom: 10px;">Hazır.</div>
+
+    <div class="mic-wrapper">
+        <div class="ripple"></div><div class="ripple"></div>
+        <button id="micBtn" class="mic-btn">
+            <i class="material-icons-round">mic</i>
+        </button>
+    </div>
+    
     <div id="chat-log"></div>
 </div>
 
 <script>
+    // --- ELEMANLAR ---
     const apiKeyInput = document.getElementById('apiKey');
     const modelSelect = document.getElementById('modelSelect');
+    const voiceSelect = document.getElementById('voiceSelect');
     const statusText = document.getElementById('status');
-    const voiceStatus = document.getElementById('voiceStatus');
-    const chatLog = document.getElementById('chat-log');
+    const visualizer = document.getElementById('visualizer');
     const micBtn = document.getElementById('micBtn');
+    const micWrapper = document.querySelector('.mic-wrapper');
 
-    // --- SES AYARLARI (Burayı Güçlendirdik) ---
+    // --- 1. SES AYARLARI (DETAYLI SEÇİM) ---
     const synth = window.speechSynthesis;
     let voices = [];
 
-    // Tarayıcı sesleri yükleyince listeyi al
     function loadVoices() {
         voices = synth.getVoices();
-        if(voices.length > 0) {
-            voiceStatus.textContent = "Ses Motoru Yüklendi (" + voices.length + " ses)";
-            // Türkçe ses var mı kontrol et
-            const trVoice = voices.find(v => v.lang.includes('tr'));
-            if(trVoice) voiceStatus.textContent += " - Türkçe bulundu ✅";
-            else voiceStatus.textContent += " - Türkçe bulunamadı (Varsayılan kullanılacak) ⚠️";
+        voiceSelect.innerHTML = "";
+        
+        if(voices.length === 0) {
+            voiceSelect.innerHTML = "<option>Ses bulunamadı (Bekleniyor...)</option>";
+            return;
         }
-    }
 
-    loadVoices();
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = loadVoices;
-    }
+        // Türkçe sesleri başa al
+        voices.sort((a, b) => {
+            const aTr = a.lang.includes('tr') || a.lang.includes('TR');
+            const bTr = b.lang.includes('tr') || b.lang.includes('TR');
+            return bTr - aTr;
+        });
 
-    // --- SESLİ OKUMA FONKSİYONU (GÜNCELLENDİ) ---
+        voices.forEach((voice, index) => {
+            const opt = document.createElement('option');
+            opt.value = index; // Sesi index ile takip edeceğiz
+            opt.text = `${voice.name} (${voice.lang})`;
+            voiceSelect.appendChild(opt);
+        });
+        
+        statusText.textContent = `${voices.length} ses bulundu. Birini seç!`;
+    }
+    // Tarayıcı sesleri yükleyince otomatik tetikle
+    if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
+
+    // --- SESLİ OKUMA & ANİMASYON ---
     function speak(text) {
-        if (synth.speaking) synth.cancel(); // Önceki konuşmayı sustur
+        if (synth.speaking) synth.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
+        const selectedVoiceIndex = voiceSelect.value;
         
-        // Türkçe sesi bul ve zorla ata
-        const trVoice = voices.find(v => v.lang.includes('tr') || v.lang.includes('TR'));
-        if (trVoice) {
-            utterance.voice = trVoice;
+        // Seçili sesi ata (Eğer geçerli bir seçim varsa)
+        if (voices[selectedVoiceIndex]) {
+            utterance.voice = voices[selectedVoiceIndex];
+            utterance.lang = voices[selectedVoiceIndex].lang;
+        } else {
+            utterance.lang = 'tr-TR'; // Yedek
         }
-        
-        utterance.lang = 'tr-TR';
-        utterance.rate = 1.0; // Hız (0.1 - 10)
-        utterance.pitch = 1.0; // Ton (0 - 2)
 
-        utterance.onstart = () => { voiceStatus.textContent = "🔊 Konuşuyor..."; };
-        utterance.onend = () => { voiceStatus.textContent = "✅ Konuşma bitti."; };
-        utterance.onerror = (e) => { voiceStatus.textContent = "❌ Ses Hatası: " + e.error; };
+        // Animasyonları Başlat/Durdur
+        utterance.onstart = () => { visualizer.classList.add('active'); statusText.textContent = "Konuşuyor..."; };
+        utterance.onend = () => { visualizer.classList.remove('active'); statusText.textContent = "Hazır."; };
+        utterance.onerror = () => { visualizer.classList.remove('active'); };
 
         synth.speak(utterance);
     }
 
-    // --- GOOGLE MODEL VE API İŞLEMLERİ ---
+    // --- 2. GOOGLE MODEL İŞLEMLERİ ---
     async function listModels() {
         const apiKey = apiKeyInput.value.trim();
         if (!apiKey) { alert("Anahtar girin!"); return; }
-        
+        statusText.textContent = "Modeller aranıyor...";
         try {
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
             const data = await response.json();
             modelSelect.innerHTML = "";
-            
             let found = false;
             data.models.forEach(model => {
                 if (model.supportedGenerationMethods.includes("generateContent")) {
                     const opt = document.createElement("option");
-                    opt.value = model.name;
-                    opt.text = model.displayName;
+                    opt.value = model.name; opt.text = model.displayName;
                     modelSelect.appendChild(opt);
                     found = true;
                 }
             });
             if(found) {
-                 // Otomatik olarak 'flash' içeren modeli seçmeye çalış
                  for(let i=0; i<modelSelect.options.length; i++) {
                      if(modelSelect.options[i].value.includes("flash")) modelSelect.selectedIndex = i;
                  }
+                 statusText.textContent = "Model seçildi.";
             }
         } catch (e) { alert("Hata: " + e.message); }
     }
 
-    // --- MİKROFON VE SOHBET ---
+    // --- 3. MİKROFON VE SOHBET ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = 'tr-TR';
     let isListening = false;
 
     micBtn.onclick = () => {
-        if (!modelSelect.value) { alert("Önce Modelleri Getir butonuna bas!"); return; }
-        if (isListening) recognition.stop();
-        else recognition.start();
+        if (!modelSelect.value || modelSelect.value.includes("Önce")) { alert("Önce Modelleri Getir!"); return; }
+        if (isListening) recognition.stop(); else recognition.start();
     };
 
-    recognition.onstart = () => { isListening = true; micBtn.classList.add('listening'); statusText.textContent = "Dinliyorum..."; };
-    recognition.onend = () => { isListening = false; micBtn.classList.remove('listening'); if(statusText.textContent==="Dinliyorum...") statusText.textContent="Hazır."; };
+    recognition.onstart = () => { isListening = true; micWrapper.classList.add('listening'); statusText.textContent = "Dinliyorum..."; micBtn.innerHTML = '<i class="material-icons-round">stop</i>'; };
+    recognition.onend = () => { isListening = false; micWrapper.classList.remove('listening'); if(statusText.textContent==="Dinliyorum...") statusText.textContent="Hazır."; micBtn.innerHTML = '<i class="material-icons-round">mic</i>'; };
 
     recognition.onresult = async (event) => {
         const text = event.results[0][0].transcript;
-        addMsg("Sen: " + text, "user");
+        addMsg(text, "user");
         statusText.textContent = "Düşünüyor...";
-        
         const response = await askGemini(text);
-        if (response) {
-            addMsg("Asistan: " + response, "ai");
-            speak(response); // Konuşmayı başlat
-            statusText.textContent = "Hazır.";
-        }
+        if (response) { addMsg(response, "ai"); speak(response); }
     };
 
     async function askGemini(prompt) {
         const apiKey = apiKeyInput.value.trim();
         const model = modelSelect.value;
-        const url = `https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${apiKey}`;
-
         try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: "Kısa ve sohbet eder gibi cevap ver. Soru: " + prompt }] }] })
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${apiKey}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: "Kısa, net ve bir asistan gibi cevap ver. Soru: " + prompt }] }] })
             });
             const data = await response.json();
             return data.candidates[0].content.parts[0].text;
-        } catch (e) {
-            addMsg("Hata: " + e.message, "error");
-            return null;
-        }
+        } catch (e) { addMsg("Hata: " + e.message, "error"); return null; }
     }
 
     function addMsg(text, type) {
-        const d = document.createElement('div');
-        d.className = "msg " + type;
-        d.textContent = text;
-        chatLog.prepend(d);
+        const d = document.createElement('div'); d.className = "msg " + type; d.textContent = text;
+        document.getElementById('chat-log').prepend(d);
     }
 </script>
 </body>
