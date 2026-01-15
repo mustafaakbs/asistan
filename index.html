@@ -1,37 +1,245 @@
-// --- Gemini API'ye Bağlanma ---
-async function askGemini(prompt) {
-    const apiKey = apiKeyInput.value;
-    // API Adresi
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: "Sen kısa cevap veren bir asistansın. Kullanıcı: " + prompt }]
-                }]
-            })
-        });
-
-        // Hata varsa burada yakalayalım
-        if (!response.ok) {
-            const errorData = await response.json();
-            // Ekrana hata penceresi aç:
-            alert("HATA KODU: " + response.status + "\n\nDetay: " + JSON.stringify(errorData, null, 2));
-            throw new Error("API Hatası");
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Sesli Asistan (Ücretsiz Versiyon)</title>
+    <style>
+        /* Modern ve Temiz Tasarım (Dark Mode) */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
         }
 
-        const data = await response.json();
-        return data.candidates[0].content.parts[0].text;
-
-    } catch (error) {
-        console.error(error);
-        // Eğer yukarıdaki alert çalışmazsa bu çalışır:
-        if (!error.message.includes("API Hatası")) {
-             alert("BAĞLANTI HATASI:\n\nTarayıcı isteği engelledi. Dosyayı çift tıklayıp açtıysan 'python sunucusu' kurman gerekebilir.");
+        .container {
+            background-color: #1e1e1e;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            border: 1px solid #333;
         }
-        return null;
+
+        h1 { margin-bottom: 20px; font-size: 1.5rem; color: #90caf9; }
+
+        .input-group { margin-bottom: 20px; }
+        
+        input[type="password"] {
+            width: 80%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #2c2c2c;
+            color: white;
+            outline: none;
+            text-align: center;
+        }
+
+        .mic-btn {
+            background: linear-gradient(145deg, #d32f2f, #b71c1c);
+            color: white;
+            border: none;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .mic-btn:hover { transform: scale(1.05); }
+        
+        .mic-btn.listening {
+            background: linear-gradient(145deg, #388e3c, #2e7d32);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+
+        .status-text {
+            margin-top: 15px;
+            font-style: italic;
+            color: #aaa;
+            height: 20px;
+        }
+
+        #chat-log {
+            margin-top: 25px;
+            text-align: left;
+            max-height: 250px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            font-size: 0.95rem;
+        }
+
+        .message { margin-bottom: 12px; padding: 8px 12px; border-radius: 8px; line-height: 1.4; }
+        .user-msg { background-color: #1565c0; color: white; align-self: flex-end; margin-left: 20px; }
+        .ai-msg { background-color: #333; color: #eee; margin-right: 20px; }
+
+        /* Kaydırma çubuğu güzelleştirme */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: #1e1e1e; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎙️ Yapay Zeka Asistanı</h1>
+    
+    <div class="input-group">
+        <input type="password" id="apiKey" placeholder="Gemini API Anahtarını Buraya Yapıştır">
+    </div>
+
+    <button id="micBtn" class="mic-btn">🎙️</button>
+    <div id="status" class="status-text">Konuşmak için butona bas...</div>
+
+    <div id="chat-log"></div>
+</div>
+
+<script>
+    const micBtn = document.getElementById('micBtn');
+    const statusText = document.getElementById('status');
+    const chatLog = document.getElementById('chat-log');
+    const apiKeyInput = document.getElementById('apiKey');
+
+    // --- Ses Tanıma Ayarları (Web Speech API) ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+        alert("Tarayıcın ses tanımayı desteklemiyor. Lütfen Chrome kullan.");
     }
-}
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'tr-TR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    let isListening = false;
+    const synth = window.speechSynthesis;
+
+    // --- Buton Mantığı ---
+    micBtn.addEventListener('click', () => {
+        if (!apiKeyInput.value) {
+            alert("Lütfen önce Gemini API Anahtarını gir!");
+            return;
+        }
+
+        if (isListening) {
+            recognition.stop();
+        } else {
+            // Önceki konuşma devam ediyorsa sustur
+            if (synth.speaking) synth.cancel();
+            recognition.start();
+        }
+    });
+
+    recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add('listening');
+        statusText.textContent = "Dinliyorum...";
+    };
+
+    recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        if (statusText.textContent === "Dinliyorum...") {
+            statusText.textContent = "Hazır.";
+        }
+    };
+
+    recognition.onresult = async (event) => {
+        const userText = event.results[0][0].transcript;
+        addMessage("Sen: " + userText, "user-msg");
+        
+        statusText.textContent = "Gemini düşünüyor...";
+        
+        const aiResponse = await askGemini(userText);
+        
+        if (aiResponse) {
+            addMessage("Asistan: " + aiResponse, "ai-msg");
+            statusText.textContent = "Konuşuyor...";
+            speak(aiResponse);
+        } else {
+            statusText.textContent = "Hata oluştu.";
+        }
+    };
+
+    // --- Gemini API'ye Bağlanma ---
+    async function askGemini(prompt) {
+        const apiKey = apiKeyInput.value;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: "Sen yardımsever ve kısa cevaplar veren Türkçe bir asistansın. Kullanıcı: " + prompt }]
+                    }]
+                })
+            });
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        } catch (error) {
+            console.error("API Hatası:", error);
+            addMessage("Hata: API anahtarını kontrol et veya internet bağlantına bak.", "ai-msg");
+            return null;
+        }
+    }
+
+    // --- Sesli Okuma (Browser Native TTS) ---
+    function speak(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Türkçe sesleri bulmaya çalış
+        const voices = synth.getVoices();
+        const trVoice = voices.find(v => v.lang.includes('tr'));
+        
+        if (trVoice) {
+            utterance.voice = trVoice;
+        }
+        
+        utterance.lang = 'tr-TR';
+        utterance.rate = 1.0; // Hız
+        utterance.pitch = 1.0; // Ton
+
+        utterance.onend = () => {
+            statusText.textContent = "Hazır.";
+        };
+
+        synth.speak(utterance);
+    }
+
+    // Ekrana Mesaj Ekleme
+    function addMessage(text, className) {
+        const div = document.createElement('div');
+        div.className = `message ${className}`;
+        div.textContent = text;
+        chatLog.prepend(div);
+    }
+</script>
+
+</body>
+</html>
