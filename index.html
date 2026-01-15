@@ -3,103 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JARVIS MOBILE READY</title>
+    <title>JARVIS AI - Mobile Pure</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        :root { --neon: #00f2fe; --bg: #0f172a; }
-        body { 
-            font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; 
-            margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;
-            height: 100vh; justify-content: center;
+        :root { --primary: #00f2fe; --bg: #0a0e17; }
+        body {
+            font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle at center, #141e30, #0a0e17);
+            color: #e2e8f0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 15px;
         }
         .container {
-            background: rgba(30, 41, 59, 0.9); padding: 25px; border-radius: 30px;
-            width: 100%; max-width: 400px; text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #334155;
+            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px); padding: 1.5rem; border-radius: 24px;
+            width: 95%; max-width: 450px; text-align: center; border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        input, select {
-            width: 100%; padding: 15px; margin: 10px 0; border-radius: 12px;
-            background: #1e293b; color: white; border: 1px solid #475569; font-size: 1rem;
+        h2 { margin: 0 0 15px 0; color: var(--primary); font-weight: 800; letter-spacing: 1px; }
+        input, select { 
+            width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 12px; 
+            border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); 
+            color: white; text-align: center; font-size: 1rem;
         }
-        .mic-btn {
-            width: 100px; height: 100px; border-radius: 50%; border: none;
-            background: #ef4444; color: white; font-size: 45px; cursor: pointer;
-            margin: 20px 0; transition: 0.3s;
+        .btn-group { display: flex; gap: 8px; margin-bottom: 10px; }
+        .action-btn { 
+            flex: 1; padding: 12px; border-radius: 12px; border: none; cursor: pointer; 
+            font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; gap: 5px;
         }
-        .mic-btn.active {
-            background: #22c55e; box-shadow: 0 0 30px rgba(34, 197, 94, 0.6);
-            transform: scale(1.1);
+        .btn-blue { background: #2563eb; } .btn-orange { background: #f59e0b; }
+        .mic-btn { 
+            width: 90px; height: 90px; border-radius: 50%; border: none; 
+            background: #ef4444; color: white; font-size: 40px; cursor: pointer; 
+            margin: 15px 0; transition: 0.3s;
         }
-        #status { font-weight: bold; color: var(--neon); margin-bottom: 10px; height: 20px; }
-        #chat-box { 
-            text-align: left; max-height: 150px; overflow-y: auto; 
-            font-size: 0.9rem; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px;
+        .mic-btn.listening { background: #22c55e; box-shadow: 0 0 25px #22c55e; transform: scale(1.05); }
+        #status { font-size: 0.9rem; color: var(--primary); margin-bottom: 10px; height: 20px; }
+        #chat-log { 
+            text-align: left; max-height: 200px; overflow-y: auto; 
+            border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; font-size: 0.9rem;
         }
-        .btn-init {
-            background: #f59e0b; color: white; border: none; padding: 15px;
-            border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer;
-            margin-bottom: 15px; text-transform: uppercase;
+        .terminal { 
+            background: #000; color: #00ff00; font-family: monospace; font-size: 11px; 
+            padding: 8px; border-radius: 8px; margin-top: 10px; height: 60px; overflow-y: auto; text-align: left;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>JARVIS PRO</h2>
-    <div id="status">Bekleniyor...</div>
+    <h2>⚡ JARVIS PURE</h2>
+    <div id="status">Sistem Beklemede</div>
 
     <input type="password" id="apiKey" placeholder="Gemini API Key Girin">
     
-    <button class="btn-init" id="initBtn">1. Sistemi ve Sesi Başlat</button>
-    
-    <select id="voiceSelect"><option>Ses Bekleniyor...</option></select>
+    <div class="btn-group">
+        <button class="action-btn btn-orange" id="voiceInitBtn">1. SESİ UYANDIR</button>
+        <button class="action-btn btn-blue" onclick="getModels()">2. MODELLERİ AL</button>
+    </div>
+
+    <select id="modelSelect"><option>Model seçin...</option></select>
+    <select id="voiceSelect"><option>Ses seçin...</option></select>
 
     <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
 
-    <div id="chat-box">Sohbet burada görünecek...</div>
+    <div class="terminal" id="term">> Log bekleniyor...</div>
+    <div id="chat-log"></div>
 </div>
 
 <script>
-    const apiKeyInput = document.getElementById('apiKey');
-    const voiceSelect = document.getElementById('voiceSelect');
-    const micBtn = document.getElementById('micBtn');
-    const statusText = document.getElementById('status');
-    const chatBox = document.getElementById('chat-box');
-    const initBtn = document.getElementById('initBtn');
-
     const synth = window.speechSynthesis;
     let voices = [];
+    let chatHistory = [];
 
-    // --- SESLERİ YÜKLE (MOBİL UYUMLU) ---
+    // --- SES SİSTEMİ ---
     function loadVoices() {
         voices = synth.getVoices();
-        voiceSelect.innerHTML = "";
+        const vSel = document.getElementById('voiceSelect');
+        vSel.innerHTML = "";
         
-        // Sadece Türkçe sesleri ayır
-        const trVoices = voices.filter(v => v.lang.includes('tr') || v.lang.includes('TR'));
+        // Türkçe öncelikli sırala
+        const tr = voices.filter(v => v.lang.includes('tr'));
+        const others = voices.filter(v => !v.lang.includes('tr'));
         
-        if (trVoices.length > 0) {
-            trVoices.forEach(v => {
-                let opt = document.createElement('option');
-                opt.value = v.name;
-                opt.text = "🇹🇷 " + v.name;
-                voiceSelect.appendChild(opt);
-            });
-        } else {
+        [...tr, ...others].forEach(v => {
             let opt = document.createElement('option');
-            opt.text = "Varsayılan Türkçe Sesi";
-            voiceSelect.appendChild(opt);
-        }
-        statusText.innerText = "Sistem ve Sesler Hazır";
+            opt.value = v.name;
+            opt.text = (v.lang.includes('tr') ? "🇹🇷 " : "") + v.name;
+            vSel.appendChild(opt);
+        });
+        logTerm("Sesler tarandı: " + voices.length);
     }
 
-    // Mobilde kullanıcı etkileşimi olmadan ses çalışmaz!
-    initBtn.onclick = () => {
+    document.getElementById('voiceInitBtn').onclick = () => {
         loadVoices();
-        const welcome = new SpeechSynthesisUtterance("Sistem başlatıldı, sizi dinliyorum.");
-        welcome.lang = 'tr-TR';
-        synth.speak(welcome);
-        initBtn.style.display = "none"; // Başladıktan sonra butonu gizle
+        const u = new SpeechSynthesisUtterance("Sistem hazır.");
+        u.lang = 'tr-TR';
+        synth.speak(u);
+        document.getElementById('status').innerText = "Ses Aktif";
     };
 
     if (speechSynthesis.onvoiceschanged !== undefined) {
@@ -108,76 +104,98 @@
 
     function speak(text) {
         if (synth.speaking) synth.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        const selectedVoice = voices.find(v => v.name === voiceSelect.value);
-        if (selectedVoice) {
-            utterance.voice = selectedVoice;
-            utterance.lang = selectedVoice.lang;
-        } else {
-            utterance.lang = 'tr-TR';
-        }
-        
-        utterance.onstart = () => statusText.innerText = "Jarvis Konuşuyor...";
-        utterance.onend = () => statusText.innerText = "Hazır";
-        
-        synth.speak(utterance);
+        const u = new SpeechSynthesisUtterance(text);
+        const selectedVoice = voices.find(v => v.name === document.getElementById('voiceSelect').value);
+        if (selectedVoice) u.voice = selectedVoice;
+        u.lang = 'tr-TR';
+        u.onstart = () => document.getElementById('status').innerText = "Jarvis Konuşuyor...";
+        u.onend = () => document.getElementById('status').innerText = "Dinlemeye Hazır";
+        synth.speak(u);
     }
 
-    // --- MİKROFON (STT) ---
+    // --- MİKROFON SİSTEMİ ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = 'tr-TR';
-    recognition.interimResults = false;
 
-    micBtn.onclick = () => {
-        try {
-            recognition.start();
-        } catch(e) {
-            console.log("Zaten dinliyor");
-        }
+    document.getElementById('micBtn').onclick = () => {
+        try { recognition.start(); } catch(e) { recognition.stop(); }
     };
 
     recognition.onstart = () => {
-        micBtn.classList.add('active');
-        statusText.innerText = "Dinliyorum...";
+        document.getElementById('micBtn').classList.add('listening');
+        document.getElementById('status').innerText = "Sizi Dinliyorum...";
     };
 
     recognition.onend = () => {
-        micBtn.classList.remove('active');
-        statusText.innerText = "Düşünüyorum...";
+        document.getElementById('micBtn').classList.remove('listening');
     };
 
     recognition.onresult = async (event) => {
         const text = event.results[0][0].transcript;
-        chatBox.innerHTML = `<b>Siz:</b> ${text}<br>` + chatBox.innerHTML;
+        addMsg(text, "user");
+        document.getElementById('status').innerText = "Düşünüyorum...";
         
         const response = await askGemini(text);
         if (response) {
-            chatBox.innerHTML = `<b>Jarvis:</b> ${response}<br>` + chatBox.innerHTML;
+            addMsg(response, "ai");
             speak(response);
         }
     };
 
-    // --- GEMINI BAĞLANTISI ---
+    // --- GEMINI API ---
     async function askGemini(prompt) {
-        const key = apiKeyInput.value.trim();
-        if(!key) { alert("Lütfen API Key girin!"); return; }
+        const key = document.getElementById('apiKey').value;
+        const model = document.getElementById('modelSelect').value;
+        if(!key || !model) return "Lütfen Key ve Model seçin.";
 
         try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${key}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: "Sen kısa ve öz cevap veren zeki bir asistansın. Soru: " + prompt }] }]
+                    contents: [{ parts: [{ text: "Sen Jarvis'sin. Çok kısa ve Türkçe cevap ver: " + prompt }] }]
                 })
             });
             const data = await res.json();
             return data.candidates[0].content.parts[0].text;
         } catch (error) {
-            chatBox.innerHTML = `<span style="color:red">Hata: API Key yanlış veya internet yok.</span><br>` + chatBox.innerHTML;
-            return null;
+            logTerm("Hata: API bağlantısı başarısız.");
+            return "Bir hata oluştu.";
         }
+    }
+
+    // --- MODELLERİ LİSTELE ---
+    async function getModels() {
+        const key = document.getElementById('apiKey').value;
+        if(!key) return alert("Key girin!");
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+            const data = await res.json();
+            const sel = document.getElementById('modelSelect');
+            sel.innerHTML = "";
+            data.models.forEach(m => {
+                if(m.supportedGenerationMethods.includes("generateContent")) {
+                    let opt = document.createElement('option');
+                    opt.value = m.name; opt.text = m.displayName.replace("Gemini ", "");
+                    sel.appendChild(opt);
+                }
+            });
+            // Flash modelini otomatik seç
+            for(let i=0; i<sel.options.length; i++) if(sel.options[i].value.includes("flash")) sel.selectedIndex = i;
+            logTerm("Modeller yüklendi.");
+        } catch(e) { logTerm("Modeller alınamadı."); }
+    }
+
+    // --- LOG VE MESAJ ---
+    function addMsg(text, type) {
+        const log = document.getElementById('chat-log');
+        log.innerHTML = `<div style="margin-bottom:10px; color:${type === 'user' ? '#93c5fd' : '#e2e8f0'}"><b>${type === 'user' ? 'Siz' : 'Jarvis'}:</b> ${text}</div>` + log.innerHTML;
+    }
+
+    function logTerm(m) {
+        const t = document.getElementById('term');
+        t.innerHTML = `> ${m}<br>` + t.innerHTML;
     }
 </script>
 </body>
