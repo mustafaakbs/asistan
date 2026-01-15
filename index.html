@@ -48,7 +48,6 @@
             letter-spacing: 1px;
         }
         
-        /* Giriş Alanları */
         input, select {
             width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.1);
@@ -58,7 +57,6 @@
         }
         input:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0, 242, 254, 0.3); }
         
-        /* Buton Grubu */
         .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .action-btn {
             flex: 1; padding: 12px; border-radius: 12px; border: none; cursor: pointer;
@@ -70,7 +68,6 @@
         .btn-orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
         .btn-red { background: linear-gradient(135deg, #ef4444, #b91c1c); font-size: 0.8rem; padding: 5px 15px; }
 
-        /* Sürekli Sohbet Switch */
         .toggle-container {
             display: flex; align-items: center; justify-content: space-between;
             background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 12px;
@@ -89,7 +86,6 @@
         input:checked + .slider { background-color: var(--primary); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* Görselleştirici (Ses Dalgaları) */
         #visualizer {
             display: flex; justify-content: center; align-items: center;
             height: 30px; gap: 4px; margin-bottom: 10px; opacity: 0; transition: 0.3s;
@@ -99,7 +95,6 @@
         .bar:nth-child(2) { animation-delay: 0.2s; } .bar:nth-child(3) { animation-delay: 0.4s; }
         @keyframes bounce { 0%, 100% { height: 5px; } 50% { height: 25px; } }
 
-        /* Mikrofon */
         .mic-wrapper { position: relative; width: 80px; height: 80px; margin: 0 auto; }
         .mic-btn {
             width: 100%; height: 100%; border-radius: 50%; border: none;
@@ -116,7 +111,6 @@
         .listening + .ripple { animation: ripple 1.5s infinite; }
         @keyframes ripple { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
 
-        /* Sohbet Log */
         #chat-log { 
             text-align: left; max-height: 250px; overflow-y: auto; 
             margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; 
@@ -138,12 +132,12 @@
     
     <div class="btn-group">
         <button class="action-btn btn-blue" onclick="listModels()"><i class="material-icons-round">cloud_download</i> Modeller</button>
-        <button class="action-btn btn-orange" onclick="loadVoices()"><i class="material-icons-round">record_voice_over</i> Sesler</button>
+        <button class="action-btn btn-orange" id="voiceLoadBtn"><i class="material-icons-round">record_voice_over</i> Sesleri Getir</button>
     </div>
     
     <div style="display: flex; gap: 10px;">
         <select id="modelSelect"><option>Önce Modelleri Getir...</option></select>
-        <select id="voiceSelect"><option>Önce Sesleri Tara...</option></select>
+        <select id="voiceSelect"><option>Önce Sesleri Getir...</option></select>
     </div>
 
     <div class="toggle-container">
@@ -180,61 +174,83 @@
     const chatLog = document.getElementById('chat-log');
     const visualizer = document.getElementById('visualizer');
     const continuousMode = document.getElementById('continuousMode');
+    const voiceLoadBtn = document.getElementById('voiceLoadBtn');
 
-    let chatHistory = []; // Hafıza Dizisi
-    const MAX_HISTORY = 6; // Ekonomik Mod: Sadece son 6 mesajı hatırla
+    let chatHistory = [];
+    const MAX_HISTORY = 6;
 
-    // --- 2. SES (TTS) İŞLEMLERİ ---
+    // --- 2. SES (TTS) İŞLEMLERİ (MOBİL UYUMLU) ---
     const synth = window.speechSynthesis;
     let voices = [];
 
     function loadVoices() {
+        // Mobilde voiceschanged olayı bazen geç tetiklenir, bu yüzden direkt alıyoruz
         voices = synth.getVoices();
-        voiceSelect.innerHTML = "";
-        if(voices.length === 0) {
-            voiceSelect.innerHTML = "<option>Ses bulunamadı.</option>"; return;
-        }
-        // Türkçe sesleri en başa al
-        voices.sort((a,b) => (b.lang.includes('tr') - a.lang.includes('tr')));
         
-        voices.forEach((v, i) => {
+        if (voices.length === 0) {
+            voiceSelect.innerHTML = "<option>Sesler taranıyor...</option>";
+            return;
+        }
+
+        voiceSelect.innerHTML = "";
+        
+        // Önce Türkçe sesleri filtrele ve başa al
+        const trVoices = voices.filter(v => v.lang.includes('tr') || v.lang.includes('TR'));
+        const otherVoices = voices.filter(v => !(v.lang.includes('tr') || v.lang.includes('TR')));
+        
+        const sortedVoices = [...trVoices, ...otherVoices];
+
+        sortedVoices.forEach((v) => {
             let opt = document.createElement('option');
-            opt.value = i; 
-            opt.text = v.name.replace("Microsoft ", "").replace("Google ", ""); // İsimleri kısalt
+            // Mobilde index yerine URI veya isim saklamak daha güvenlidir
+            opt.value = v.voiceURI || v.name; 
+            let langTag = (v.lang.includes('tr')) ? "🇹🇷 " : "";
+            opt.text = langTag + v.name.replace("Microsoft ", "").replace("Google ", "");
             voiceSelect.appendChild(opt);
         });
-        statusText.textContent = `${voices.length} ses yüklendi.`;
+
+        statusText.textContent = `${voices.length} ses hazır.`;
     }
-    if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
+
+    // Mobil cihazlar için butona basıldığında sesleri zorla yükle
+    voiceLoadBtn.addEventListener('click', () => {
+        loadVoices();
+        // Bazı mobil tarayıcılarda ses motorunu uyandırmak için boş bir ses çalmak gerekir
+        const silent = new SpeechSynthesisUtterance("");
+        synth.speak(silent);
+    });
+
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
 
     function speak(text) {
         if (synth.speaking) synth.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
-        const idx = voiceSelect.value;
-        if (voices[idx]) {
-            utterance.voice = voices[idx];
-            utterance.lang = voices[idx].lang;
+        
+        // SEÇİLİ SESİ BULMA (MOBİL İÇİN KRİTİK DÜZELTME)
+        const selectedValue = voiceSelect.value;
+        const selectedVoice = voices.find(v => (v.voiceURI === selectedValue || v.name === selectedValue));
+        
+        if (selectedVoice) {
+            utterance.voice = selectedVoice;
+            utterance.lang = selectedVoice.lang;
         } else {
-            utterance.lang = 'tr-TR';
+            // Eğer seçili ses bulunamazsa (mobilde nadiren olur), zorla Türkçe ara
+            const forceTr = voices.find(v => v.lang.includes('tr'));
+            utterance.lang = forceTr ? forceTr.lang : 'tr-TR';
         }
 
-        // Animasyonlar
-        utterance.onstart = () => { 
-            visualizer.classList.add('active'); 
-            statusText.textContent = "Konuşuyor..."; 
-        };
-        
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        utterance.onstart = () => { visualizer.classList.add('active'); statusText.textContent = "Konuşuyor..."; };
         utterance.onend = () => { 
             visualizer.classList.remove('active'); 
             statusText.textContent = "Hazır.";
-            
-            // SÜREKLİ SOHBET MODU (Kritik Nokta)
             if (continuousMode.checked) {
-                setTimeout(() => {
-                    statusText.textContent = "Tekrar dinleniyor...";
-                    recognition.start();
-                }, 800); // 0.8 sn bekle ve tekrar dinle
+                setTimeout(() => { recognition.start(); }, 800);
             }
         };
 
@@ -244,127 +260,76 @@
     // --- 3. API VE MODEL İŞLEMLERİ ---
     async function listModels() {
         const key = apiKeyInput.value.trim();
-        if(!key) return alert("Lütfen API Anahtarını girin.");
-        
+        if(!key) return alert("API Anahtarı girin.");
         try {
             statusText.textContent = "Modeller aranıyor...";
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
             const data = await res.json();
-            
             if(data.error) throw new Error(data.error.message);
-
             modelSelect.innerHTML = "";
-            let found = false;
             data.models.forEach(m => {
                 if(m.supportedGenerationMethods.includes("generateContent")) {
                     let opt = document.createElement('option');
                     opt.value = m.name; opt.text = m.displayName;
                     modelSelect.appendChild(opt);
-                    found = true;
                 }
             });
-            
-            if(found) {
-                statusText.textContent = "Modeller yüklendi.";
-                // Otomatik olarak 'flash' modelini seç (En hızlısı)
-                for(let i=0; i<modelSelect.options.length; i++) {
-                    if(modelSelect.options[i].value.includes("flash")) modelSelect.selectedIndex = i;
-                }
+            for(let i=0; i<modelSelect.options.length; i++) {
+                if(modelSelect.options[i].value.includes("flash")) modelSelect.selectedIndex = i;
             }
+            statusText.textContent = "Modeller hazır.";
         } catch(e) { alert("Hata: " + e.message); }
     }
 
-    // --- 4. AKILLI GEMINI FONKSİYONU (HAFIZA + TASARRUF) ---
+    // --- 4. AKILLI GEMINI FONKSİYONU ---
     async function askGemini() {
         const key = apiKeyInput.value.trim();
         const model = modelSelect.value;
-
-        // EKONOMİ MODU: Çok eski mesajları sil
-        if (chatHistory.length > MAX_HISTORY) {
-            chatHistory = chatHistory.slice(-MAX_HISTORY);
-        }
-
-        // SİSTEM TALİMATI: Kısa cevap ver (Kotayı korur)
+        if (chatHistory.length > MAX_HISTORY) chatHistory = chatHistory.slice(-MAX_HISTORY);
         const systemInstruction = {
             role: "user",
-            parts: [{ text: "Sen Jarvis adında zeki bir asistansın. Cevapların her zaman kısa, net ve Türkçe olsun. Uzun paragraflar yazma." }]
+            parts: [{ text: "Sen Jarvis'sin. Çok kısa, net ve Türkçe cevap ver." }]
         };
-
-        // Paketle: [Sistem Mesajı] + [Geçmiş]
         const payload = { contents: [systemInstruction, ...chatHistory] };
-
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${key}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
-            
             const data = await res.json();
-            if(data.error) throw new Error(data.error.message);
-            
             return data.candidates[0].content.parts[0].text;
-
-        } catch(e) {
-            addMsg("Bağlantı Hatası: " + e.message, "error");
-            return null;
-        }
+        } catch(e) { addMsg("Hata: " + e.message, "error"); return null; }
     }
 
     function clearHistory() {
         chatHistory = [];
         chatLog.innerHTML = "";
-        statusText.textContent = "Hafıza silindi.";
-        speak("Hafızam temizlendi. Sıfırdan başlıyoruz.");
+        speak("Sıfırlandım.");
     }
 
     // --- 5. MİKROFON (STT) ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.lang = 'tr-TR';
-    recognition.interimResults = false;
-    recognition.continuous = false; // Her cümlede dur, biz tekrar başlatacağız
+    recognition.continuous = false;
 
     let isListening = false;
-
     micBtn.onclick = () => {
-        if(!modelSelect.value || modelSelect.value.includes("Önce")) return alert("Lütfen önce 'Modelleri Getir' butonuna basın.");
-        
-        if(isListening) {
-            recognition.stop();
-            continuousMode.checked = false; // Elle durdurulursa döngüyü kır
-        } else {
-            recognition.start();
-        }
+        if(!modelSelect.value || modelSelect.value.includes("Önce")) return alert("Modelleri hazırla!");
+        if(isListening) recognition.stop(); else recognition.start();
     };
 
-    recognition.onstart = () => {
-        isListening = true;
-        micBtn.classList.add('listening');
-        micBtn.innerHTML = '<i class="material-icons-round">stop</i>';
-        statusText.textContent = "Dinliyorum...";
-    };
-
-    recognition.onend = () => {
-        isListening = false;
-        micBtn.classList.remove('listening');
-        micBtn.innerHTML = '<i class="material-icons-round">mic</i>';
-        // Not: Burada tekrar başlatma yapmıyoruz, speak() fonksiyonunun sonunda yapıyoruz.
-    };
+    recognition.onstart = () => { isListening=true; micBtn.classList.add('listening'); statusText.textContent="Dinliyorum..."; };
+    recognition.onend = () => { isListening=false; micBtn.classList.remove('listening'); };
 
     recognition.onresult = async (event) => {
         const text = event.results[0][0].transcript;
         addMsg(text, "user");
-        statusText.textContent = "Düşünüyor...";
-        
-        // Hafızaya Ekle (User)
         chatHistory.push({ role: "user", parts: [{ text: text }] });
-
         const response = await askGemini();
-        
         if(response) {
             addMsg(response, "ai");
-            // Hafızaya Ekle (Model)
             chatHistory.push({ role: "model", parts: [{ text: response }] });
             speak(response);
         }
