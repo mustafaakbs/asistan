@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini 2.0 Flash Asistan</title>
+    <title>Gemini 1.5 Sesli Asistan</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a; /* Koyu Mavi-Gri */
-            color: #e2e8f0;
+            background-color: #111827; /* Çok koyu lacivert */
+            color: #f3f4f6;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -17,51 +17,52 @@
             margin: 0;
         }
         .container {
-            background-color: #1e293b;
+            background-color: #1f2937;
             padding: 2rem;
             border-radius: 16px;
             width: 90%;
             max-width: 500px;
             text-align: center;
-            border: 1px solid #334155;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 1px solid #374151;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        h2 { color: #38bdf8; margin-bottom: 20px; }
+        h2 { color: #60a5fa; margin-bottom: 20px; font-weight: 600; }
         
         input[type="password"] {
             width: 80%; padding: 12px; margin-bottom: 20px;
-            border-radius: 8px; border: 1px solid #475569;
-            background-color: #334155; color: white; text-align: center; font-size: 1rem;
+            border-radius: 8px; border: 1px solid #4b5563;
+            background-color: #374151; color: white; text-align: center; font-size: 1rem;
         }
         
         .mic-btn {
-            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             color: white; border: none;
             width: 90px; height: 90px; border-radius: 50%;
             font-size: 36px; cursor: pointer; margin: 10px auto;
-            box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
             transition: transform 0.2s;
+            display: flex; align-items: center; justify-content: center;
         }
         .mic-btn:active { transform: scale(0.95); }
         .mic-btn.listening { 
-            background: linear-gradient(135deg, #ef4444, #dc2626);
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
             animation: pulse 1.5s infinite; 
         }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
         
-        #status { font-style: italic; color: #94a3b8; margin-bottom: 15px; height: 20px; }
-        #chat-log { text-align: left; max-height: 300px; overflow-y: auto; border-top: 1px solid #334155; padding-top: 15px; }
+        #status { font-style: italic; color: #9ca3af; margin-bottom: 15px; height: 20px; }
+        #chat-log { text-align: left; max-height: 300px; overflow-y: auto; border-top: 1px solid #374151; padding-top: 15px; }
         .msg { padding: 10px; margin-bottom: 8px; border-radius: 8px; font-size: 0.95rem; line-height: 1.4; }
-        .user { background: #334155; color: #bae6fd; align-self: flex-end; }
-        .ai { background: #0f172a; color: #e2e8f0; border: 1px solid #334155; }
+        .user { background: #374151; color: #bfdbfe; align-self: flex-end; margin-left: 20px; }
+        .ai { background: #111827; color: #e5e7eb; border: 1px solid #374151; margin-right: 20px; }
         .error { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>⚡ Gemini 2.0 Asistan</h2>
-    <input type="password" id="apiKey" placeholder="YENİ API Anahtarını Buraya Yapıştır">
+    <h2>🚀 Gemini 1.5 Asistan</h2>
+    <input type="password" id="apiKey" placeholder="API Anahtarını Buraya Yapıştır">
     
     <button id="micBtn" class="mic-btn">🎙️</button>
     <div id="status">Hazır.</div>
@@ -75,7 +76,6 @@
     const chatLog = document.getElementById('chat-log');
     const apiKeyInput = document.getElementById('apiKey');
 
-    // Tarayıcı Sesi (TTS) ve Mikrofon (STT) Hazırlığı
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) alert("Lütfen Google Chrome kullanın.");
 
@@ -84,7 +84,6 @@
     let isListening = false;
     const synth = window.speechSynthesis;
 
-    // --- BUTON İŞLEMLERİ ---
     micBtn.onclick = () => {
         if (!apiKeyInput.value) { alert("Lütfen API Anahtarını girin!"); return; }
         if (isListening) recognition.stop();
@@ -97,7 +96,7 @@
     recognition.onresult = async (event) => {
         const text = event.results[0][0].transcript;
         log("Sen: " + text, "user");
-        statusText.textContent = "Gemini 2.0 düşünüyor...";
+        statusText.textContent = "Cevap üretiliyor...";
         
         const response = await askGemini(text);
         if (response) {
@@ -107,19 +106,18 @@
         }
     };
 
-    // --- GEMINI 2.0 API BAĞLANTISI ---
     async function askGemini(prompt) {
         const apiKey = apiKeyInput.value.trim();
         
-        // DİKKAT: Senin paylaştığın curl komutundaki model ismini buraya yazdım:
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        // --- DÜZELTME: En sağlam model 'gemini-1.5-flash' seçildi ---
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         try {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: "Sen kısa cevaplar veren bir sesli asistansın. Kullanıcı: " + prompt }] }]
+                    contents: [{ parts: [{ text: "Sen kısa ve net cevaplar veren Türkçe bir asistansın. Kullanıcı: " + prompt }] }]
                 })
             });
 
@@ -139,8 +137,10 @@
         }
     }
 
-    // --- SESLENDİRME (TTS) ---
     function speak(text) {
+        // Konuşurken önceki sesi kes
+        if (synth.speaking) synth.cancel();
+
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'tr-TR';
         synth.speak(u);
