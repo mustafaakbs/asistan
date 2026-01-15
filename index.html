@@ -3,175 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gemini + Google Cloud TTS Test Paneli</title>
+    <title>Gemini Sesli Asistan (Ücretsiz Versiyon)</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #202124; color: #e8eaed; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: #303134; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); width: 90%; max-width: 600px; margin-top: 20px; }
-        h2 { color: #8ab4f8; text-align: center; }
-        
-        .settings-box { background: #3c4043; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #5f6368; }
-        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #9aa0a6; }
-        input, select { width: 100%; padding: 8px; margin-bottom: 10px; background: #202124; border: 1px solid #5f6368; color: white; border-radius: 4px; box-sizing: border-box; }
-        
-        .mic-wrapper { text-align: center; margin: 20px 0; }
-        .mic-btn { width: 80px; height: 80px; border-radius: 50%; border: none; background: #ea4335; color: white; font-size: 30px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .mic-btn.listening { background: #34a853; animation: pulse 1.5s infinite; }
-        
-        #status { text-align: center; height: 20px; font-style: italic; color: #bdc1c6; margin-bottom: 10px; }
-        
-        .chat-box { max-height: 300px; overflow-y: auto; border-top: 1px solid #5f6368; padding-top: 10px; font-size: 0.95rem; }
-        .msg { margin-bottom: 10px; padding: 8px; border-radius: 6px; }
-        .user { background: #2b3a55; color: #a8c7fa; text-align: right; }
-        .ai { background: #3c4043; color: #e8eaed; }
+        /* Modern ve Temiz Tasarım (Dark Mode) */
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
 
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(52, 168, 83, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(52, 168, 83, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 168, 83, 0); } }
+        .container {
+            background-color: #1e1e1e;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        h1 { margin-bottom: 20px; font-size: 1.5rem; color: #90caf9; }
+
+        .input-group { margin-bottom: 20px; }
+        
+        input[type="password"] {
+            width: 80%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background-color: #2c2c2c;
+            color: white;
+            outline: none;
+            text-align: center;
+        }
+
+        .mic-btn {
+            background: linear-gradient(145deg, #d32f2f, #b71c1c);
+            color: white;
+            border: none;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            font-size: 32px;
+            cursor: pointer;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+
+        .mic-btn:hover { transform: scale(1.05); }
+        
+        .mic-btn.listening {
+            background: linear-gradient(145deg, #388e3c, #2e7d32);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+
+        .status-text {
+            margin-top: 15px;
+            font-style: italic;
+            color: #aaa;
+            height: 20px;
+        }
+
+        #chat-log {
+            margin-top: 25px;
+            text-align: left;
+            max-height: 250px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+            font-size: 0.95rem;
+        }
+
+        .message { margin-bottom: 12px; padding: 8px 12px; border-radius: 8px; line-height: 1.4; }
+        .user-msg { background-color: #1565c0; color: white; align-self: flex-end; margin-left: 20px; }
+        .ai-msg { background-color: #333; color: #eee; margin-right: 20px; }
+
+        /* Kaydırma çubuğu güzelleştirme */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        ::-webkit-scrollbar-track { background: #1e1e1e; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🤖 AI Asistan Test Paneli</h2>
-
-    <div class="settings-box">
-        <label>🔑 Gemini API Key (Zeka İçin):</label>
-        <input type="password" id="geminiKey" placeholder="Gemini Anahtarını Yapıştır...">
-        
-        <label>🔑 Google Cloud API Key (Ses İçin):</label>
-        <input type="password" id="cloudKey" placeholder="Google Cloud Anahtarını Yapıştır...">
-        
-        <label>🗣️ Ses Seçimi (WaveNet):</label>
-        <select id="voiceSelect">
-            <option value="tr-TR-Wavenet-C">Türkçe - Erkek (Kalın)</option>
-            <option value="tr-TR-Wavenet-B">Türkçe - Erkek (Normal)</option>
-            <option value="tr-TR-Wavenet-A">Türkçe - Kadın (A)</option>
-            <option value="tr-TR-Wavenet-D">Türkçe - Kadın (D)</option>
-            <option value="tr-TR-Standard-A">Türkçe - Standart (Robotik)</option>
-        </select>
+    <h1>🎙️ Yapay Zeka Asistanı</h1>
+    
+    <div class="input-group">
+        <input type="password" id="apiKey" placeholder="Gemini API Anahtarını Buraya Yapıştır">
     </div>
 
-    <div id="status">Hazır. Başlamak için butona bas.</div>
+    <button id="micBtn" class="mic-btn">🎙️</button>
+    <div id="status" class="status-text">Konuşmak için butona bas...</div>
 
-    <div class="mic-wrapper">
-        <button id="micBtn" class="mic-btn">🎙️</button>
-    </div>
-
-    <div class="chat-box" id="chatBox"></div>
+    <div id="chat-log"></div>
 </div>
 
 <script>
-    // --- Ayarlar ve Değişkenler ---
     const micBtn = document.getElementById('micBtn');
-    const statusDiv = document.getElementById('status');
-    const chatBox = document.getElementById('chatBox');
+    const statusText = document.getElementById('status');
+    const chatLog = document.getElementById('chat-log');
+    const apiKeyInput = document.getElementById('apiKey');
+
+    // --- Ses Tanıma Ayarları (Web Speech API) ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
-    // Web Speech API (Dinleme)
-    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new Recognition();
+    if (!SpeechRecognition) {
+        alert("Tarayıcın ses tanımayı desteklemiyor. Lütfen Chrome kullan.");
+    }
+
+    const recognition = new SpeechRecognition();
     recognition.lang = 'tr-TR';
     recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
 
     let isListening = false;
+    const synth = window.speechSynthesis;
 
-    // --- Olay Dinleyicileri ---
-    micBtn.onclick = () => {
-        if (!document.getElementById('geminiKey').value || !document.getElementById('cloudKey').value) {
-            alert("Lütfen önce her iki API anahtarını da girin!");
+    // --- Buton Mantığı ---
+    micBtn.addEventListener('click', () => {
+        if (!apiKeyInput.value) {
+            alert("Lütfen önce Gemini API Anahtarını gir!");
             return;
         }
-        if (isListening) recognition.stop();
-        else recognition.start();
-    };
+
+        if (isListening) {
+            recognition.stop();
+        } else {
+            // Önceki konuşma devam ediyorsa sustur
+            if (synth.speaking) synth.cancel();
+            recognition.start();
+        }
+    });
 
     recognition.onstart = () => {
         isListening = true;
         micBtn.classList.add('listening');
-        statusDiv.innerText = "Dinliyorum...";
+        statusText.textContent = "Dinliyorum...";
     };
 
     recognition.onend = () => {
         isListening = false;
         micBtn.classList.remove('listening');
-        if(statusDiv.innerText === "Dinliyorum...") statusDiv.innerText = "Hazır.";
-    };
-
-    recognition.onresult = async (event) => {
-        const text = event.results[0][0].transcript;
-        addMessage("Sen: " + text, "user");
-        
-        statusDiv.innerText = "Gemini Düşünüyor...";
-        const aiText = await getGeminiResponse(text);
-        
-        if (aiText) {
-            addMessage("Gemini: " + aiText, "ai");
-            statusDiv.innerText = "Ses Oluşturuluyor...";
-            await speakWithCloudTTS(aiText);
-            statusDiv.innerText = "Hazır.";
+        if (statusText.textContent === "Dinliyorum...") {
+            statusText.textContent = "Hazır.";
         }
     };
 
-    // --- 1. Gemini API (Zeka) ---
-    async function getGeminiResponse(prompt) {
-        const apiKey = document.getElementById('geminiKey').value;
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    recognition.onresult = async (event) => {
+        const userText = event.results[0][0].transcript;
+        addMessage("Sen: " + userText, "user-msg");
         
+        statusText.textContent = "Gemini düşünüyor...";
+        
+        const aiResponse = await askGemini(userText);
+        
+        if (aiResponse) {
+            addMessage("Asistan: " + aiResponse, "ai-msg");
+            statusText.textContent = "Konuşuyor...";
+            speak(aiResponse);
+        } else {
+            statusText.textContent = "Hata oluştu.";
+        }
+    };
+
+    // --- Gemini API'ye Bağlanma ---
+    async function askGemini(prompt) {
+        const apiKey = apiKeyInput.value;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
         try {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: "Kısa ve sohbet havasında cevap ver. Soru: " + prompt }] }]
+                    contents: [{
+                        parts: [{ text: "Sen yardımsever ve kısa cevaplar veren Türkçe bir asistansın. Kullanıcı: " + prompt }]
+                    }]
                 })
             });
+
             const data = await response.json();
             return data.candidates[0].content.parts[0].text;
-        } catch (e) {
-            console.error(e);
-            alert("Gemini Hatası! Anahtarı kontrol et.");
+        } catch (error) {
+            console.error("API Hatası:", error);
+            addMessage("Hata: API anahtarını kontrol et veya internet bağlantına bak.", "ai-msg");
             return null;
         }
     }
 
-    // --- 2. Google Cloud TTS API (Ses) ---
-    async function speakWithCloudTTS(text) {
-        const apiKey = document.getElementById('cloudKey').value;
-        const voiceName = document.getElementById('voiceSelect').value;
-        const url = `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`;
+    // --- Sesli Okuma (Browser Native TTS) ---
+    function speak(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Türkçe sesleri bulmaya çalış
+        const voices = synth.getVoices();
+        const trVoice = voices.find(v => v.lang.includes('tr'));
+        
+        if (trVoice) {
+            utterance.voice = trVoice;
+        }
+        
+        utterance.lang = 'tr-TR';
+        utterance.rate = 1.0; // Hız
+        utterance.pitch = 1.0; // Ton
 
-        // WaveNet-C veya WaveNet-B Erkek sesleridir, diğerleri Kadındır.
-        const ssmlGender = (voiceName.includes('Wavenet-C') || voiceName.includes('Wavenet-B')) ? 'MALE' : 'FEMALE';
-
-        const requestBody = {
-            input: { text: text },
-            voice: { languageCode: "tr-TR", name: voiceName, ssmlGender: ssmlGender },
-            audioConfig: { audioEncoding: "MP3", speakingRate: 1.0, pitch: 0 }
+        utterance.onend = () => {
+            statusText.textContent = "Hazır.";
         };
 
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
-            });
-            const result = await response.json();
-            
-            if (result.audioContent) {
-                const audio = new Audio("data:audio/mp3;base64," + result.audioContent);
-                audio.play();
-            } else {
-                console.error(result);
-                alert("TTS Hatası: Google Cloud API yetkilendirmesi kapalı olabilir.");
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Ses Servisi Bağlantı Hatası");
-        }
+        synth.speak(utterance);
     }
 
-    function addMessage(text, type) {
+    // Ekrana Mesaj Ekleme
+    function addMessage(text, className) {
         const div = document.createElement('div');
-        div.className = `msg ${type}`;
-        div.innerText = text;
-        chatBox.prepend(div);
+        div.className = `message ${className}`;
+        div.textContent = text;
+        chatLog.prepend(div);
     }
 </script>
 
