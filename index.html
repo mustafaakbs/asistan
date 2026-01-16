@@ -2,91 +2,125 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JARVIS TV MASTER</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simbiot v3.1</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
-        :root { --primary: #00f2fe; --secondary: #4facfe; --bg-dark: #0a0e17; }
+        :root {
+            --neon-blue: #00f2ea;
+            --neon-green: #39ff14;
+            --glass-bg: rgba(20, 30, 48, 0.85);
+        }
         body {
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
-            background: radial-gradient(circle at center, #141e30, #0a0e17);
-            color: #e2e8f0; display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh; margin: 0; overflow-x: hidden;
+            font-family: 'Segoe UI', sans-serif;
+            background: radial-gradient(circle at center, #2b32b2, #1488cc);
+            background-size: 200% 200%;
+            animation: bgAnim 15s ease infinite;
+            color: white; margin: 0; display: flex; justify-content: center; min-height: 100vh;
         }
-        .container {
-            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(20px);
-            padding: 2rem; border-radius: 24px; width: 90%; max-width: 500px;
-            text-align: center; border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 50px rgba(0, 242, 254, 0.15); margin-top: 20px;
-        }
-        h2 { margin: 0 0 20px 0; color: var(--primary); font-weight: 800; letter-spacing: 1px; }
-        input, select {
-            width: 100%; padding: 12px; margin-bottom: 12px; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); color: white;
-            text-align: center; font-size: 0.95rem;
-        }
-        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .action-btn {
-            flex: 1; padding: 12px; border-radius: 12px; border: none; cursor: pointer;
-            font-weight: bold; color: white; display: flex; align-items: center; justify-content: center; gap: 5px;
-        }
-        .btn-blue { background: #2563eb; } .btn-orange { background: #f59e0b; } .btn-red { background: #ef4444; }
-        
-        #visualizer { display: flex; justify-content: center; height: 30px; gap: 4px; margin-bottom: 10px; opacity: 0; }
-        #visualizer.active { opacity: 1; }
-        .bar { width: 5px; background: var(--primary); border-radius: 5px; animation: bounce 1s infinite; }
-        @keyframes bounce { 0%, 100% { height: 5px; } 50% { height: 25px; } }
+        @keyframes bgAnim { 0% {background-position:0% 50%} 50% {background-position:100% 50%} 100% {background-position:0% 50%} }
 
+        .container {
+            width: 90%; max-width: 480px; padding: 25px;
+            background: var(--glass-bg); backdrop-filter: blur(20px);
+            border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 40px rgba(0, 242, 234, 0.2); margin: 30px 0;
+            transition: box-shadow 0.5s;
+        }
+        .container:hover { box-shadow: 0 0 60px rgba(57, 255, 20, 0.3); }
+
+        .logo { 
+            width: 100%; max-width: 260px; margin-bottom: 20px; 
+            filter: drop-shadow(0 0 10px rgba(0,242,234,0.6));
+        }
+        
+        #terminal {
+            background: #050a14; color: var(--neon-green); 
+            font-family: 'Courier New', monospace; font-size: 0.8rem;
+            height: 100px; overflow-y: auto; padding: 12px;
+            border-radius: 12px; text-align: left; border: 1px solid #333;
+            margin-bottom: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        /* Yeni Input Grubu Tasarımı */
+        .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        
+        input, select {
+            width: 100%; padding: 14px; border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); 
+            color: white; box-sizing: border-box; font-size: 1rem;
+            transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: var(--neon-blue); outline: none; background: rgba(0,0,0,0.5); }
+
+        .btn-small {
+            padding: 0 20px; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, var(--neon-blue), #0072ff);
+            color: #000; font-weight: bold; cursor: pointer; white-space: nowrap;
+        }
+        .btn-small:active { transform: scale(0.95); }
+
+        .mic-wrapper { position: relative; display: flex; justify-content: center; margin: 20px 0; }
         .mic-btn {
             width: 90px; height: 90px; border-radius: 50%; border: none;
-            background: #ef4444; color: white; font-size: 40px; cursor: pointer;
-            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3); transition: 0.3s;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            color: white; font-size: 45px; cursor: pointer; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3); z-index: 2;
+            transition: transform 0.2s;
         }
-        .mic-btn.listening { background: #22c55e; box-shadow: 0 0 30px #22c55e; transform: scale(1.1); }
+        .mic-btn:active { transform: scale(0.95); }
+        .mic-btn.listening { background: linear-gradient(135deg, #11998e, #38ef7d); animation: pulse 1.2s infinite; }
+        
+        @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(56, 239, 125, 0.7);} 70% {box-shadow: 0 0 0 20px rgba(56, 239, 125, 0);} 100% {box-shadow: 0 0 0 0 rgba(56, 239, 125, 0);} }
 
         #chat-log { 
-            text-align: left; max-height: 250px; overflow-y: auto; 
-            margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; 
+            max-height: 200px; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.1); 
+            padding-top: 10px; display: flex; flex-direction: column-reverse;
         }
-        .msg { padding: 10px 14px; margin-bottom: 8px; border-radius: 12px; font-size: 0.95rem; }
-        .user { background: rgba(59, 130, 246, 0.2); color: #93c5fd; text-align: right; }
-        .ai { background: rgba(255, 255, 255, 0.05); color: #e2e8f0; }
-        .tv-cmd { background: #8b5cf6; color: white; font-weight: bold; text-align: center; font-size: 0.8rem; letter-spacing: 1px; }
-        #iot-status { font-size:0.75rem; margin-top:5px; }
+        .msg { padding: 12px 16px; margin: 6px 0; border-radius: 16px; font-size: 0.95rem; max-width: 85%; }
+        .user { align-self: flex-end; background: linear-gradient(90deg, #2193b0, #6dd5ed); color: #fff; border-bottom-right-radius: 2px; }
+        .ai { align-self: flex-start; background: rgba(255,255,255,0.1); color: #e2e8f0; border-bottom-left-radius: 2px; border: 1px solid rgba(255,255,255,0.05); }
+
+        .btn-clear {
+            background: transparent; border: 1px solid rgba(255, 100, 100, 0.3); color: #ff6b6b;
+            padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;
+            margin-top: 15px; width: 100%; transition: 0.3s;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>JARVIS TV COMMANDER</h2>
+    <div style="text-align: center;"><img src="logo.png" class="logo" alt="Simbiot"></div>
     
-    <input type="password" id="apiKey" placeholder="Gemini API Key">
+    <div id="terminal">> Simbiot v3.1 Başlatılıyor...<br>> Bağlantı bekleniyor.</div>
+
+    <input type="password" id="apiKey" placeholder="Gemini API Anahtarı" style="margin-bottom: 10px;">
     
-    <div class="btn-group">
-        <button class="action-btn btn-blue" onclick="listModels()">Modeller</button>
-        <button class="action-btn btn-orange" onclick="loadVoices()">Sesler</button>
+    <div class="input-row">
+        <input type="text" id="tvIP" placeholder="TV IP (örn: 192.168.1.50)">
+        <button class="btn-small" onclick="saveIP()">KAYDET</button>
     </div>
-    
+
     <div style="display: flex; gap: 10px;">
-        <select id="modelSelect"><option>Önce Modeller...</option></select>
-        <select id="voiceSelect"><option>Önce Sesler...</option></select>
+        <select id="modelSelect" onclick="listModels()"><option>Model Yükle...</option></select>
+        <select id="voiceSelect"><option>Sesler Yükleniyor...</option></select>
     </div>
 
-    <div id="visualizer"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
-
-    <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
+    <div class="mic-wrapper">
+        <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
+    </div>
     
-    <div id="status" style="margin-top:10px; color:#aaa;">Hazır.</div>
-    <div id="iot-status" style="color:#f59e0b;">Firebase Bekleniyor...</div>
+    <div id="status" style="text-align:center; color:#888; font-size:0.9rem;">Hazır</div>
     <div id="chat-log"></div>
-    <button class="action-btn btn-red" onclick="clearHistory()" style="margin-top:15px; width:100%;">Geçmişi Temizle</button>
+    <button class="btn-clear" onclick="clearChat()">Sohbeti Temizle</button>
 </div>
 
 <script>
-    // --- 1. FIREBASE CONFIG ---
+    /* --- AYARLAR --- */
     const firebaseConfig = {
         apiKey: "AIzaSyAdo6LaAge-EO_Q5SPbbAdInHC0H1OvA7c",
         authDomain: "asistan-489ec.firebaseapp.com",
@@ -96,103 +130,134 @@
         messagingSenderId: "161041095710",
         appId: "1:161041095710:web:11747cc9b9499948c9e20f"
     };
-
-    let database;
+    
+    let db;
     try {
         firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-        document.getElementById('iot-status').innerText = "TV Kontrol Sistemi Aktif";
-        document.getElementById('iot-status').style.color = "#22c55e";
-    } catch(e) { console.error(e); }
+        db = firebase.database();
+        logTerminal("Firebase Bağlantısı Başarılı.");
+        
+        // 1. AÇILIŞTA IP ADRESİNİ GETİR
+        db.ref('tv/ip').once('value').then((snapshot) => {
+            if (snapshot.exists()) {
+                const savedIP = snapshot.val();
+                document.getElementById('tvIP').value = savedIP;
+                logTerminal("Kayıtlı IP Yüklendi: " + savedIP);
+            } else {
+                logTerminal("Kayıtlı IP bulunamadı.");
+            }
+        });
 
-    function sendTV(command) {
-        if(database) {
-            database.ref('tv_komut').set(command);
-            addMsg("📡 Sinyal: " + command, "tv-cmd");
+        // ESP32 Loglarını Dinle
+        db.ref('esp_log').on('value', (s) => { if(s.val()) logTerminal("ESP: " + s.val()); });
+
+    } catch(e) { logTerminal("HATA: Firebase başlatılamadı!"); }
+
+    /* --- FONKSİYONLAR --- */
+    const synth = window.speechSynthesis;
+    let voices = [];
+    let chatHistory = [];
+
+    function logTerminal(msg) {
+        const t = document.getElementById('terminal');
+        t.innerHTML += `<br>> ${msg}`;
+        t.scrollTop = t.scrollHeight;
+    }
+
+    // 2. BUTONA BASINCA IP KAYDET
+    function saveIP() {
+        const ip = document.getElementById('tvIP').value;
+        if(db && ip) {
+            db.ref('tv/ip').set(ip);
+            logTerminal("IP Adresi Kaydedildi: " + ip);
+        } else {
+            logTerminal("Hata: IP boş veya DB yok.");
         }
     }
 
-    // --- 2. TEMEL DEĞİŞKENLER ---
-    const apiKeyInput = document.getElementById('apiKey');
-    const modelSelect = document.getElementById('modelSelect');
-    const voiceSelect = document.getElementById('voiceSelect');
-    const micBtn = document.getElementById('micBtn');
-    const statusText = document.getElementById('status');
-    const chatLog = document.getElementById('chat-log');
-    
-    let chatHistory = [];
-    const MAX_HISTORY = 6;
-    const synth = window.speechSynthesis;
-    let voices = [];
-
-    // --- 3. SES İŞLEMLERİ ---
+    // Sesleri Yükle
     function loadVoices() {
         voices = synth.getVoices();
-        voiceSelect.innerHTML = "";
-        voices.sort((a,b) => (b.lang.includes('tr') - a.lang.includes('tr')));
+        const sel = document.getElementById('voiceSelect');
+        sel.innerHTML = "";
+        voices.sort((a, b) => b.lang.includes('tr') - a.lang.includes('tr'));
         voices.forEach((v, i) => {
             let opt = document.createElement('option');
-            opt.value = i; opt.text = (v.lang.includes('tr')?"🇹🇷 ":"") + v.name;
-            voiceSelect.appendChild(opt);
+            opt.value = i;
+            opt.text = (v.lang.includes('tr') ? "🇹🇷 " : "") + v.name;
+            sel.appendChild(opt);
         });
+        if(voices.length > 0) logTerminal("Ses paketleri yüklendi.");
     }
     if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
+    setTimeout(loadVoices, 1000); 
 
     function speak(text) {
-        if (synth.speaking) synth.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        const idx = voiceSelect.value;
-        if (voices[idx]) { utterance.voice = voices[idx]; utterance.lang = voices[idx].lang; }
-        utterance.onstart = () => document.getElementById('visualizer').classList.add('active');
-        utterance.onend = () => document.getElementById('visualizer').classList.remove('active');
-        synth.speak(utterance);
+        if(synth.speaking) synth.cancel();
+        const utt = new SpeechSynthesisUtterance(text);
+        const selectedVoiceIndex = document.getElementById('voiceSelect').value;
+        if(voices[selectedVoiceIndex]) utt.voice = voices[selectedVoiceIndex];
+        utt.rate = 1.0; 
+        synth.speak(utt);
     }
 
-    // --- 4. GEMINI API ---
-    async function listModels() {
-        const key = apiKeyInput.value.trim();
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-        const data = await res.json();
-        modelSelect.innerHTML = "";
-        data.models.forEach(m => {
-            if(m.supportedGenerationMethods.includes("generateContent")) {
-                let opt = document.createElement('option'); opt.value = m.name; opt.text = m.displayName;
-                modelSelect.appendChild(opt);
+    function sendCommand(cmd, delay = 0) {
+        setTimeout(() => {
+            firebase.database().ref('tv_komut').set(cmd);
+            logTerminal("Sinyal: " + cmd);
+        }, delay);
+    }
+
+    async function processComplexLogic(tag) {
+        let cleanTag = tag.replace("[", "").replace("]", "");
+        let parts = cleanTag.split(":");
+        let action = parts[0];
+        let value = parts[1] ? parseInt(parts[1]) : 1;
+
+        if (action === "CHANNEL") {
+            let digits = value.toString().split('');
+            let delay = 0;
+            digits.forEach(d => {
+                sendCommand("NUM_" + d, delay);
+                delay += 600; 
+            });
+            sendCommand("OK", delay + 600); 
+        } 
+        else if (action === "VOL_UP" || action === "VOL_DOWN") {
+            let delay = 0;
+            for(let i=0; i<value; i++) {
+                sendCommand(action, delay);
+                delay += 300; 
             }
-        });
-        for(let i=0; i<modelSelect.options.length; i++) if(modelSelect.options[i].value.includes("flash")) modelSelect.selectedIndex = i;
+        }
+        else {
+            sendCommand(action);
+        }
     }
 
-    async function askGemini() {
-        const key = apiKeyInput.value.trim();
-        const model = modelSelect.value;
-        if (chatHistory.length > MAX_HISTORY) chatHistory = chatHistory.slice(-MAX_HISTORY);
+    async function askSimbiot(input) {
+        const key = document.getElementById('apiKey').value;
+        const model = document.getElementById('modelSelect').value;
 
-        // *** GÜÇLENDİRİLMİŞ KUMANDA TALİMATLARI ***
-        const systemInstruction = {
-            role: "user",
-            parts: [{ text: `Sen Jarvis'sin. TV kumandası sensin. Aşağıdaki durumlarda cümlenin sonuna ilgili kodu GİZLİCE ekle:
-            
-            - TV Aç/Kapat -> [POWER]
-            - YouTube Aç -> [YOUTUBE]
-            - Netflix Aç -> [NETFLIX]
-            - Sesi Kapat/Sessize al -> [MUTE]
-            - Ses Aç (Genel) -> [VOL_UP]
-            - Ses Kıs (Genel) -> [VOL_DOWN]
-            - Sesi X kadar aç -> [SES_AC:X]
-            - Kanal İleri/Değiştir -> [CH_UP]
-            - Kanal Geri -> [CH_DOWN]
-            - Kanal X'i aç -> [KANAL_GIT:X]
-            - Menü/Home aç -> [HOME]
-            - Geri Dön/Çıkış -> [RETURN]
-            - Tamam/Okeyle -> [ENTER]
-            - Yukarı/Aşağı/Sağ/Sol -> [UP], [DOWN], [RIGHT], [LEFT]
-            - Kaynak/HDMI değiştir -> [SOURCE]
+        const systemPrompt = `Sen Simbiot'sun. Kullanıcı dostu ve zeki bir asistansın.
+        GÖREV: Kullanıcının isteğini analiz et ve cümlenin SONUNA aşağıdaki formatta TEK bir kod ekle.
+        
+        1. Kanal Değiştirme: "Kanal 12'yi aç" -> [CHANNEL:12]
+        2. Ses Seviyesi: "Sesi 5 kademe aç" -> [VOL_UP:5] | "Sesi 3 birim kıs" -> [VOL_DOWN:3]
+        3. Normal Komutlar: [POWER], [MUTE], [YOUTUBE], [NETFLIX], [HOME], [OK], [BACK], [UP], [DOWN], [LEFT], [RIGHT].
+        
+        Örnek: "15. kanalı açar mısın?" -> Cevabın: "Hemen açıyorum. [CHANNEL:15]"
+        Örnek: "Sesi biraz aç." -> "Tamamdır. [VOL_UP:3]"
+        Örnek: "Nasılsın?" -> "İyiyim teşekkürler." (Kod yok)
+        `;
 
-            Normal sohbete devam et. Cevapların kısa olsun.` }]
+        const payload = {
+            contents: [
+                { role: "user", parts: [{ text: systemPrompt }] },
+                ...chatHistory,
+                { role: "user", parts: [{ text: input }] }
+            ]
         };
-
-        const payload = { contents: [systemInstruction, ...chatHistory] };
 
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${key}`, {
@@ -200,65 +265,59 @@
             });
             const data = await res.json();
             return data.candidates[0].content.parts[0].text;
-        } catch(e) { return null; }
+        } catch(e) { logTerminal("Gemini Hatası"); return null; }
     }
 
-    // --- 5. MİKROFON VE İŞLEME ---
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'tr-TR';
-    
-    micBtn.onclick = () => recognition.start();
-    recognition.onstart = () => { micBtn.classList.add('listening'); statusText.innerText="Dinliyorum..."; };
-    recognition.onend = () => { micBtn.classList.remove('listening'); statusText.innerText="Hazır."; };
 
-    recognition.onresult = async (event) => {
-        const text = event.results[0][0].transcript;
-        addMsg(text, "user");
-        chatHistory.push({ role: "user", parts: [{ text: text }] });
+    document.getElementById('micBtn').onclick = () => recognition.start();
+    recognition.onstart = () => { document.getElementById('micBtn').classList.add('listening'); document.getElementById('status').innerText="Dinliyor..."; };
+    recognition.onend = () => { document.getElementById('micBtn').classList.remove('listening'); document.getElementById('status').innerText="Hazır"; };
+
+    recognition.onresult = async (e) => {
+        const text = e.results[0][0].transcript;
+        addChat(text, "user");
         
-        const response = await askGemini();
-        
+        const response = await askSimbiot(text);
         if(response) {
-            let clean = response;
+            let commandMatch = response.match(/\[[A-Z_]+(?::\d+)?\]/);
+            let speechText = response.replace(/\[.*?\]/g, "").trim();
+
+            addChat(speechText, "ai");
+            speak(speechText);
             
-            // GELİŞMİŞ KOMUT LİSTESİ
-            const map = [
-                { tag: "[POWER]", cmd: "POWER" },
-                { tag: "[YOUTUBE]", cmd: "YOUTUBE" },
-                { tag: "[NETFLIX]", cmd: "NETFLIX" },
-                { tag: "[MUTE]", cmd: "MUTE" },
-                { tag: "[VOL_UP]", cmd: "VOL_UP" },
-                { tag: "[VOL_DOWN]", cmd: "VOL_DOWN" },
-                { tag: "[CH_UP]", cmd: "CH_UP" },
-                { tag: "[CH_DOWN]", cmd: "CH_DOWN" },
-                { tag: "[HOME]", cmd: "HOME" },
-                { tag: "[RETURN]", cmd: "RETURN" },
-                { tag: "[ENTER]", cmd: "ENTER" },
-                { tag: "[UP]", cmd: "UP" }, { tag: "[DOWN]", cmd: "DOWN" },
-                { tag: "[LEFT]", cmd: "LEFT" }, { tag: "[RIGHT]", cmd: "RIGHT" },
-                { tag: "[SOURCE]", cmd: "SOURCE" }
-            ];
+            if(commandMatch) {
+                logTerminal("Algılanan İşlem: " + commandMatch[0]);
+                processComplexLogic(commandMatch[0]);
+            }
 
-            map.forEach(m => {
-                if(response.includes(m.tag)) { sendTV(m.cmd); clean = clean.replace(m.tag, ""); }
-            });
-
-            // Sayısal Komutlar
-            let ses = response.match(/\[SES_AC:(\d+)\]/);
-            if(ses) { sendTV("SES_AC:" + ses[1]); clean = clean.replace(ses[0], ""); }
-            
-            let kanal = response.match(/\[KANAL_GIT:(\d+)\]/);
-            if(kanal) { sendTV("KANAL_GIT:" + kanal[1]); clean = clean.replace(kanal[0], ""); }
-
-            addMsg(clean, "ai");
+            chatHistory.push({ role: "user", parts: [{ text: text }] });
             chatHistory.push({ role: "model", parts: [{ text: response }] });
-            speak(clean);
         }
     };
 
-    function clearHistory() { chatHistory=[]; chatLog.innerHTML=""; speak("Geçmiş silindi."); }
-    function addMsg(text, type) { const div = document.createElement('div'); div.className="msg "+type; div.innerText=text; chatLog.prepend(div); }
+    function addChat(text, type) {
+        const d = document.createElement('div');
+        d.className = `msg ${type}`; d.innerText = text;
+        document.getElementById('chat-log').prepend(d);
+    }
+    
+    function clearChat() {
+        chatHistory = [];
+        document.getElementById('chat-log').innerHTML = "";
+        logTerminal("Sohbet geçmişi silindi.");
+    }
+
+    async function listModels() {
+        const key = document.getElementById('apiKey').value;
+        if(!key) return;
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+        const data = await res.json();
+        const sel = document.getElementById('modelSelect');
+        sel.innerHTML = "";
+        data.models.forEach(m => { if(m.name.includes("flash")) { let o=new Option(m.displayName, m.name); sel.add(o); }});
+    }
 </script>
 </body>
 </html>
