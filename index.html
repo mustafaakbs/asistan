@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simbiot v3.1</title>
+    <title>Simbiot v3.2 - Master Control</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -12,11 +12,11 @@
         :root {
             --neon-blue: #00f2ea;
             --neon-green: #39ff14;
-            --glass-bg: rgba(20, 30, 48, 0.85);
+            --glass-bg: rgba(20, 30, 48, 0.9);
         }
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: radial-gradient(circle at center, #2b32b2, #1488cc);
+            background: radial-gradient(circle at center, #1a2980, #26d0ce);
             background-size: 200% 200%;
             animation: bgAnim 15s ease infinite;
             color: white; margin: 0; display: flex; justify-content: center; min-height: 100vh;
@@ -28,33 +28,26 @@
             background: var(--glass-bg); backdrop-filter: blur(20px);
             border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 0 40px rgba(0, 242, 234, 0.2); margin: 30px 0;
-            transition: box-shadow 0.5s;
         }
-        .container:hover { box-shadow: 0 0 60px rgba(57, 255, 20, 0.3); }
 
-        .logo { 
-            width: 100%; max-width: 260px; margin-bottom: 20px; 
-            filter: drop-shadow(0 0 10px rgba(0,242,234,0.6));
-        }
+        .logo { width: 100%; max-width: 250px; margin-bottom: 20px; filter: drop-shadow(0 0 10px rgba(0,242,234,0.6)); }
         
         #terminal {
             background: #050a14; color: var(--neon-green); 
             font-family: 'Courier New', monospace; font-size: 0.8rem;
             height: 100px; overflow-y: auto; padding: 12px;
             border-radius: 12px; text-align: left; border: 1px solid #333;
-            margin-bottom: 20px; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            margin-bottom: 20px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8);
         }
 
-        /* Yeni Input Grubu Tasarımı */
         .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
         
         input, select {
             width: 100%; padding: 14px; border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); 
-            color: white; box-sizing: border-box; font-size: 1rem;
-            transition: 0.3s;
+            color: white; box-sizing: border-box; font-size: 1rem; transition: 0.3s;
         }
-        input:focus, select:focus { border-color: var(--neon-blue); outline: none; background: rgba(0,0,0,0.5); }
+        input:focus { border-color: var(--neon-blue); outline: none; background: rgba(0,0,0,0.5); }
 
         .btn-small {
             padding: 0 20px; border-radius: 12px; border: none;
@@ -63,17 +56,13 @@
         }
         .btn-small:active { transform: scale(0.95); }
 
-        .mic-wrapper { position: relative; display: flex; justify-content: center; margin: 20px 0; }
         .mic-btn {
             width: 90px; height: 90px; border-radius: 50%; border: none;
             background: linear-gradient(135deg, #00c6ff, #0072ff);
             color: white; font-size: 45px; cursor: pointer; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3); z-index: 2;
-            transition: transform 0.2s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3); margin: 20px auto; display: block;
         }
-        .mic-btn:active { transform: scale(0.95); }
         .mic-btn.listening { background: linear-gradient(135deg, #11998e, #38ef7d); animation: pulse 1.2s infinite; }
-        
         @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(56, 239, 125, 0.7);} 70% {box-shadow: 0 0 0 20px rgba(56, 239, 125, 0);} 100% {box-shadow: 0 0 0 0 rgba(56, 239, 125, 0);} }
 
         #chat-log { 
@@ -83,11 +72,11 @@
         .msg { padding: 12px 16px; margin: 6px 0; border-radius: 16px; font-size: 0.95rem; max-width: 85%; }
         .user { align-self: flex-end; background: linear-gradient(90deg, #2193b0, #6dd5ed); color: #fff; border-bottom-right-radius: 2px; }
         .ai { align-self: flex-start; background: rgba(255,255,255,0.1); color: #e2e8f0; border-bottom-left-radius: 2px; border: 1px solid rgba(255,255,255,0.05); }
-
+        
         .btn-clear {
             background: transparent; border: 1px solid rgba(255, 100, 100, 0.3); color: #ff6b6b;
             padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 0.8rem;
-            margin-top: 15px; width: 100%; transition: 0.3s;
+            margin-top: 15px; width: 100%;
         }
     </style>
 </head>
@@ -96,7 +85,7 @@
 <div class="container">
     <div style="text-align: center;"><img src="logo.png" class="logo" alt="Simbiot"></div>
     
-    <div id="terminal">> Simbiot v3.1 Başlatılıyor...<br>> Bağlantı bekleniyor.</div>
+    <div id="terminal">> Simbiot v3.2 Başlatılıyor...<br>> Firebase Bağlantısı Bekleniyor.</div>
 
     <input type="password" id="apiKey" placeholder="Gemini API Anahtarı" style="margin-bottom: 10px;">
     
@@ -110,9 +99,7 @@
         <select id="voiceSelect"><option>Sesler Yükleniyor...</option></select>
     </div>
 
-    <div class="mic-wrapper">
-        <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
-    </div>
+    <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
     
     <div id="status" style="text-align:center; color:#888; font-size:0.9rem;">Hazır</div>
     <div id="chat-log"></div>
@@ -120,7 +107,6 @@
 </div>
 
 <script>
-    /* --- AYARLAR --- */
     const firebaseConfig = {
         apiKey: "AIzaSyAdo6LaAge-EO_Q5SPbbAdInHC0H1OvA7c",
         authDomain: "asistan-489ec.firebaseapp.com",
@@ -137,14 +123,11 @@
         db = firebase.database();
         logTerminal("Firebase Bağlantısı Başarılı.");
         
-        // 1. AÇILIŞTA IP ADRESİNİ GETİR
+        // IP Adresini getir
         db.ref('tv/ip').once('value').then((snapshot) => {
             if (snapshot.exists()) {
-                const savedIP = snapshot.val();
-                document.getElementById('tvIP').value = savedIP;
-                logTerminal("Kayıtlı IP Yüklendi: " + savedIP);
-            } else {
-                logTerminal("Kayıtlı IP bulunamadı.");
+                document.getElementById('tvIP').value = snapshot.val();
+                logTerminal("Kayıtlı IP Yüklendi.");
             }
         });
 
@@ -153,7 +136,6 @@
 
     } catch(e) { logTerminal("HATA: Firebase başlatılamadı!"); }
 
-    /* --- FONKSİYONLAR --- */
     const synth = window.speechSynthesis;
     let voices = [];
     let chatHistory = [];
@@ -164,18 +146,11 @@
         t.scrollTop = t.scrollHeight;
     }
 
-    // 2. BUTONA BASINCA IP KAYDET
     function saveIP() {
         const ip = document.getElementById('tvIP').value;
-        if(db && ip) {
-            db.ref('tv/ip').set(ip);
-            logTerminal("IP Adresi Kaydedildi: " + ip);
-        } else {
-            logTerminal("Hata: IP boş veya DB yok.");
-        }
+        if(db && ip) { db.ref('tv/ip').set(ip); logTerminal("IP Kaydedildi: " + ip); }
     }
 
-    // Sesleri Yükle
     function loadVoices() {
         voices = synth.getVoices();
         const sel = document.getElementById('voiceSelect');
@@ -183,27 +158,24 @@
         voices.sort((a, b) => b.lang.includes('tr') - a.lang.includes('tr'));
         voices.forEach((v, i) => {
             let opt = document.createElement('option');
-            opt.value = i;
-            opt.text = (v.lang.includes('tr') ? "🇹🇷 " : "") + v.name;
+            opt.value = i; opt.text = (v.lang.includes('tr') ? "🇹🇷 " : "") + v.name;
             sel.appendChild(opt);
         });
-        if(voices.length > 0) logTerminal("Ses paketleri yüklendi.");
     }
     if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
-    setTimeout(loadVoices, 1000); 
+    setTimeout(loadVoices, 1000);
 
     function speak(text) {
         if(synth.speaking) synth.cancel();
         const utt = new SpeechSynthesisUtterance(text);
-        const selectedVoiceIndex = document.getElementById('voiceSelect').value;
-        if(voices[selectedVoiceIndex]) utt.voice = voices[selectedVoiceIndex];
-        utt.rate = 1.0; 
+        const vIdx = document.getElementById('voiceSelect').value;
+        if(voices[vIdx]) utt.voice = voices[vIdx];
         synth.speak(utt);
     }
 
     function sendCommand(cmd, delay = 0) {
         setTimeout(() => {
-            firebase.database().ref('tv_komut').set(cmd);
+            if(db) db.ref('tv_komut').set(cmd);
             logTerminal("Sinyal: " + cmd);
         }, delay);
     }
@@ -217,20 +189,12 @@
         if (action === "CHANNEL") {
             let digits = value.toString().split('');
             let delay = 0;
-            digits.forEach(d => {
-                sendCommand("NUM_" + d, delay);
-                delay += 600; 
-            });
-            sendCommand("OK", delay + 600); 
-        } 
-        else if (action === "VOL_UP" || action === "VOL_DOWN") {
+            digits.forEach(d => { sendCommand("NUM_" + d, delay); delay += 600; });
+            sendCommand("OK", delay + 600);
+        } else if (action.includes("VOL")) {
             let delay = 0;
-            for(let i=0; i<value; i++) {
-                sendCommand(action, delay);
-                delay += 300; 
-            }
-        }
-        else {
+            for(let i=0; i<value; i++) { sendCommand(action, delay); delay += 300; }
+        } else {
             sendCommand(action);
         }
     }
@@ -239,16 +203,24 @@
         const key = document.getElementById('apiKey').value;
         const model = document.getElementById('modelSelect').value;
 
-        const systemPrompt = `Sen Simbiot'sun. Kullanıcı dostu ve zeki bir asistansın.
+        // ÖZELLEŞTİRİLMİŞ AYRIŞTIRMA TALİMATI
+        const systemPrompt = `Sen Simbiot'sun. Evin akıllı asistanısın.
         GÖREV: Kullanıcının isteğini analiz et ve cümlenin SONUNA aşağıdaki formatta TEK bir kod ekle.
         
-        1. Kanal Değiştirme: "Kanal 12'yi aç" -> [CHANNEL:12]
-        2. Ses Seviyesi: "Sesi 5 kademe aç" -> [VOL_UP:5] | "Sesi 3 birim kıs" -> [VOL_DOWN:3]
-        3. Normal Komutlar: [POWER], [MUTE], [YOUTUBE], [NETFLIX], [HOME], [OK], [BACK], [UP], [DOWN], [LEFT], [RIGHT].
+        -- GÜÇ YÖNETİMİ (ÖNEMLİ: Hangi cihazı istediğine dikkat et) --
+        1. Sadece Soundbar/Ses Sistemi: "Soundbar'ı aç", "Ses sistemini kapat" -> [POWER_SB]
+        2. Sadece TV: "Televizyonu aç", "TV'yi kapat" -> [POWER_TV]
+        3. Her İkisi/Genel: "Sistemi aç", "Hepsini kapat", "TV'yi ve soundbarı aç" -> [POWER_ALL]
+
+        -- DİĞER KOMUTLAR --
+        4. Kanal: "Kanal 12" -> [CHANNEL:12]
+        5. Ses Seviyesi: "Sesi 5 aç" -> [VOL_UP:5] | "Sesi kıs" -> [VOL_DOWN:1]
+        6. Tuşlar: [MUTE], [YOUTUBE], [NETFLIX], [HOME], [OK], [BACK], [UP], [DOWN], [LEFT], [RIGHT].
         
-        Örnek: "15. kanalı açar mısın?" -> Cevabın: "Hemen açıyorum. [CHANNEL:15]"
-        Örnek: "Sesi biraz aç." -> "Tamamdır. [VOL_UP:3]"
-        Örnek: "Nasılsın?" -> "İyiyim teşekkürler." (Kod yok)
+        Örnek: "Soundbarı açar mısın?" -> "Hemen açıyorum. [POWER_SB]"
+        Örnek: "Televizyonu kapat." -> "TV kapanıyor. [POWER_TV]"
+        Örnek: "Sistemi başlat." -> "Keyifli seyirler. [POWER_ALL]"
+        Eğer sohbet ediliyorsa kod ekleme.
         `;
 
         const payload = {
@@ -265,12 +237,11 @@
             });
             const data = await res.json();
             return data.candidates[0].content.parts[0].text;
-        } catch(e) { logTerminal("Gemini Hatası"); return null; }
+        } catch(e) { logTerminal("Gemini Hatası!"); return null; }
     }
 
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'tr-TR';
-
     document.getElementById('micBtn').onclick = () => recognition.start();
     recognition.onstart = () => { document.getElementById('micBtn').classList.add('listening'); document.getElementById('status').innerText="Dinliyor..."; };
     recognition.onend = () => { document.getElementById('micBtn').classList.remove('listening'); document.getElementById('status').innerText="Hazır"; };
@@ -278,22 +249,17 @@
     recognition.onresult = async (e) => {
         const text = e.results[0][0].transcript;
         addChat(text, "user");
-        
         const response = await askSimbiot(text);
         if(response) {
             let commandMatch = response.match(/\[[A-Z_]+(?::\d+)?\]/);
             let speechText = response.replace(/\[.*?\]/g, "").trim();
-
             addChat(speechText, "ai");
             speak(speechText);
-            
             if(commandMatch) {
                 logTerminal("Algılanan İşlem: " + commandMatch[0]);
                 processComplexLogic(commandMatch[0]);
             }
-
-            chatHistory.push({ role: "user", parts: [{ text: text }] });
-            chatHistory.push({ role: "model", parts: [{ text: response }] });
+            chatHistory.push({ role: "user", parts: [{ text: text }] }, { role: "model", parts: [{ text: response }] });
         }
     };
 
@@ -302,20 +268,14 @@
         d.className = `msg ${type}`; d.innerText = text;
         document.getElementById('chat-log').prepend(d);
     }
+    function clearChat() { chatHistory = []; document.getElementById('chat-log').innerHTML = ""; logTerminal("Geçmiş Silindi."); }
     
-    function clearChat() {
-        chatHistory = [];
-        document.getElementById('chat-log').innerHTML = "";
-        logTerminal("Sohbet geçmişi silindi.");
-    }
-
     async function listModels() {
         const key = document.getElementById('apiKey').value;
         if(!key) return;
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
         const data = await res.json();
-        const sel = document.getElementById('modelSelect');
-        sel.innerHTML = "";
+        const sel = document.getElementById('modelSelect'); sel.innerHTML = "";
         data.models.forEach(m => { if(m.name.includes("flash")) { let o=new Option(m.displayName, m.name); sel.add(o); }});
     }
 </script>
