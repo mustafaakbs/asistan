@@ -3,93 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simbiot - TV Avcısı</title>
+    <title>Simbiot v4.6 - Ultimate</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
-        :root { --neon: #00f2ea; --bg: #0f172a; }
+        :root { --neon: #00f2ea; --bg: #0f172a; --panel-bg: rgba(255,255,255,0.05); }
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: radial-gradient(circle at center, #1e293b, #000);
-            color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0;
+            background: radial-gradient(circle at center, #111827, #000);
+            color: white; display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; margin: 0;
         }
         .container {
-            width: 90%; max-width: 500px; padding: 20px;
-            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
-            border-radius: 20px; border: 1px solid rgba(0, 242, 234, 0.3); margin-top: 20px;
-            text-align: center;
+            width: 90%; max-width: 500px; padding: 20px; margin: 20px 0;
         }
-        .logo { width: 180px; margin-bottom: 15px; }
+        .logo { width: 180px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;}
         
+        /* Terminal */
         #terminal {
-            background: black; color: #39ff14; font-family: monospace; font-size: 0.8rem;
-            height: 100px; overflow-y: auto; padding: 10px; text-align: left;
+            background: #000; color: #39ff14; font-family: monospace; font-size: 0.75rem;
+            height: 80px; overflow-y: auto; padding: 10px; text-align: left;
             border-radius: 10px; margin-bottom: 15px; border: 1px solid #333;
         }
 
-        /* TARA VE BAĞLAN ALANI */
-        .scan-area {
-            background: rgba(0, 242, 234, 0.1); padding: 15px; border-radius: 15px;
-            border: 1px dashed var(--neon); margin-bottom: 15px;
+        /* Paneller */
+        .panel {
+            background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px; padding: 15px; margin-bottom: 15px;
         }
-        
-        select {
-            width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px;
-            background: #111; color: white; border: 1px solid #444; font-size: 1rem;
-        }
+        .panel h3 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--neon); text-transform: uppercase; letter-spacing: 1px; }
 
-        .btn {
-            padding: 12px; border: none; border-radius: 10px; cursor: pointer;
-            font-weight: bold; width: 100%; margin-bottom: 5px; transition: 0.3s;
+        /* Form Elemanları */
+        select, input {
+            width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px;
+            background: rgba(0,0,0,0.5); color: white; border: 1px solid #444; 
+            font-size: 0.9rem; box-sizing: border-box;
         }
-        .btn-scan { background: #f39c12; color: white; } /* Turuncu */
-        .btn-conn { background: var(--neon); color: black; } /* Mavi */
+        select:focus, input:focus { border-color: var(--neon); outline: none; }
+
+        /* Butonlar */
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer;
+            font-weight: bold; margin-bottom: 5px; transition: 0.2s;
+        }
+        .btn-scan { background: linear-gradient(90deg, #f39c12, #e67e22); color: white; }
+        .btn-conn { background: linear-gradient(90deg, var(--neon), #00c6ff); color: #000; }
+        .btn-clear { background: transparent; border: 1px solid #e74c3c; color: #e74c3c; margin-top: 10px;}
+        .btn-clear:hover { background: rgba(231, 76, 60, 0.1); }
+
+        /* Sohbet ve Mic */
+        .mic-container { display: flex; justify-content: center; margin: 15px 0; }
+        .mic-btn {
+            width: 75px; height: 75px; border-radius: 50%; border: none;
+            background: linear-gradient(135deg, #00c6ff, #0072ff);
+            color: white; font-size: 35px; cursor: pointer; box-shadow: 0 0 20px rgba(0,198,255,0.3);
+        }
+        .mic-btn.listening { background: linear-gradient(135deg, #11998e, #38ef7d); transform: scale(1.1); box-shadow: 0 0 30px #38ef7d; }
+
+        #chat-log { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column-reverse; }
+        .msg { padding: 10px 14px; margin: 5px 0; border-radius: 12px; font-size: 0.9rem; max-width: 85%; }
+        .user { background: rgba(0, 242, 234, 0.2); align-self: flex-end; color: #fff; }
+        .ai { background: rgba(255,255,255,0.1); align-self: flex-start; color: #ddd; }
         
-        .btn:active { transform: scale(0.98); }
-        
-        /* Loading Animasyonu */
+        /* Animasyon */
         .scanning { animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0.5; } }
-
-        /* Sohbet Alanı */
-        #chat-log { max-height: 150px; overflow-y: auto; text-align: left; margin-top:10px; }
-        .msg { padding: 8px 12px; margin: 5px 0; border-radius: 10px; font-size: 0.9rem; }
-        .user { background: #2980b9; align-self: flex-end; }
-        .ai { background: #27ae60; align-self: flex-start; }
-        
-        .mic-btn {
-            width: 70px; height: 70px; border-radius: 50%; border: none;
-            background: #e74c3c; color: white; font-size: 35px; cursor: pointer;
-        }
-        .mic-btn.listening { background: #2ecc71; transform: scale(1.1); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <img src="logo.png" class="logo">
-    <div id="terminal">> Simbiot Hazır.</div>
+    <div id="terminal">> Simbiot Sistem Başlatıldı...</div>
 
-    <div class="scan-area">
-        <h3>📡 TV Tarayıcı</h3>
-        <button id="scanBtn" class="btn btn-scan" onclick="startScan()">NETWORK TARA (Cihazları Bul)</button>
-        
-        <select id="foundDevices">
-            <option value="">Tarama bekleniyor...</option>
-        </select>
-
-        <button class="btn btn-conn" onclick="saveAndConnect()">SEÇİLİ TV'YE BAĞLAN</button>
+    <div class="panel">
+        <h3>📡 Ağ Tarayıcı</h3>
+        <button id="scanBtn" class="btn btn-scan" onclick="startScan()">TV'leri Tara (Network Scan)</button>
+        <select id="foundDevices"><option value="">Cihazlar aranıyor...</option></select>
+        <button class="btn btn-conn" onclick="saveAndConnect()">Seçili TV'ye Bağlan</button>
     </div>
 
-    <input type="password" id="apiKey" placeholder="Gemini API Key" style="width:90%; padding:10px; margin-bottom:10px; border-radius:10px; border:none;">
+    <div class="panel">
+        <h3>🧠 Simbiot Beyni</h3>
+        <input type="password" id="apiKey" placeholder="Gemini API Key Girin">
+        
+        <div style="display: flex; gap: 5px;">
+            <select id="modelSelect" onfocus="listModels()">
+                <option>Model Seçin...</option>
+            </select>
+            <select id="voiceSelect">
+                <option>Ses Yükleniyor...</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mic-container">
+        <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
+    </div>
     
-    <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
     <div id="chat-log"></div>
+    <button class="btn btn-clear" onclick="clearChat()">Sohbet Geçmişini Temizle</button>
 </div>
 
 <script>
+    /* --- AYARLAR --- */
     const firebaseConfig = {
         apiKey: "AIzaSyAdo6LaAge-EO_Q5SPbbAdInHC0H1OvA7c",
         authDomain: "asistan-489ec.firebaseapp.com",
@@ -99,66 +118,170 @@
         messagingSenderId: "161041095710",
         appId: "1:161041095710:web:11747cc9b9499948c9e20f"
     };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
 
-    function log(msg) {
-        document.getElementById('terminal').innerHTML = `> ${msg}<br>` + document.getElementById('terminal').innerHTML;
-    }
-
-    // 1. Taramayı Başlat
-    function startScan() {
-        log("Tarama komutu gönderildi...");
-        document.getElementById('scanBtn').classList.add('scanning');
-        document.getElementById('scanBtn').innerText = "Taranıyor... (Bekleyin)";
+    let db;
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.database();
+        log("Firebase Bağlantısı Aktif.");
         
-        // Simbiot'a 'SCAN' emri ver
-        db.ref('tv_komut').set('SCAN_NETWORK');
-        
-        // Firebase'deki sonuçları dinle
+        // ESP Loglarını Dinle
+        db.ref('esp_log').on('value', (s) => { if(s.val()) log("ESP: " + s.val()); });
+        // Tarama Sonucunu Dinle
         db.ref('scan_result').on('value', (snap) => {
             const ip = snap.val();
             if(ip && ip !== "YOK") {
                 const sel = document.getElementById('foundDevices');
-                sel.innerHTML = ""; // Listeyi temizle
-                
+                sel.innerHTML = ""; 
                 let opt = document.createElement('option');
-                opt.value = ip;
-                opt.text = "Bulundu! Samsung TV (" + ip + ")";
+                opt.value = ip; opt.text = "Bulundu! Samsung TV (" + ip + ")";
                 sel.appendChild(opt);
-                
                 log("Cihaz Bulundu: " + ip);
                 document.getElementById('scanBtn').classList.remove('scanning');
                 document.getElementById('scanBtn').innerText = "Tekrar Tara";
             }
         });
+    } catch(e) { log("Firebase Hatası!"); }
+
+    function log(msg) {
+        const t = document.getElementById('terminal');
+        t.innerHTML = `> ${msg}<br>` + t.innerHTML;
     }
 
-    // 2. Seçili TV'yi Kaydet ve Bağlan
+    /* --- CİHAZ TARAMA --- */
+    function startScan() {
+        log("Ağ taranıyor, lütfen bekleyin...");
+        document.getElementById('scanBtn').classList.add('scanning');
+        document.getElementById('scanBtn').innerText = "Aranıyor...";
+        db.ref('tv_komut').set('SCAN_NETWORK');
+    }
+
     function saveAndConnect() {
         const ip = document.getElementById('foundDevices').value;
         if(ip) {
-            db.ref('tv/ip').set(ip); // IP'yi kaydet
-            db.ref('tv_komut').set('CONNECT_NOW'); // Bağlanmaya zorla
-            log("Bağlantı isteği gönderildi: " + ip);
+            db.ref('tv/ip').set(ip);
+            db.ref('tv_komut').set('CONNECT_NOW');
+            log("Bağlanılıyor: " + ip);
         } else {
-            log("Lütfen listeden bir TV seçin.");
+            log("Listeden cihaz seçin.");
         }
     }
 
-    // ESP Loglarını Dinle
-    db.ref('esp_log').on('value', (s) => { if(s.val()) log("ESP: " + s.val()); });
+    /* --- YAPAY ZEKA VE SES --- */
+    const synth = window.speechSynthesis;
+    let voices = [];
+    let chatHistory = [];
 
-    // --- GEMINI & SES (Standart) ---
+    // Sesleri Yükle
+    function loadVoices() {
+        voices = synth.getVoices();
+        const sel = document.getElementById('voiceSelect');
+        sel.innerHTML = "";
+        voices.sort((a, b) => b.lang.includes('tr') - a.lang.includes('tr'));
+        voices.forEach((v, i) => {
+            let opt = document.createElement('option');
+            opt.value = i; opt.text = (v.lang.includes('tr') ? "🇹🇷 " : "") + v.name;
+            sel.appendChild(opt);
+        });
+    }
+    if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
+    setTimeout(loadVoices, 1000);
+
+    // Modelleri Listele
+    async function listModels() {
+        const key = document.getElementById('apiKey').value;
+        if(!key) return;
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+            const data = await res.json();
+            const sel = document.getElementById('modelSelect');
+            sel.innerHTML = "";
+            data.models.forEach(m => { 
+                if(m.name.includes("flash")) { 
+                    let o = new Option(m.displayName, m.name); 
+                    sel.add(o); 
+                }
+            });
+        } catch(e) { log("API Key Hatası"); }
+    }
+
+    function speak(text) {
+        if(synth.speaking) synth.cancel();
+        const utt = new SpeechSynthesisUtterance(text);
+        const vIdx = document.getElementById('voiceSelect').value;
+        if(voices[vIdx]) utt.voice = voices[vIdx];
+        synth.speak(utt);
+    }
+
+    /* --- SOHBET VE LOGIC --- */
+    function clearChat() {
+        chatHistory = [];
+        document.getElementById('chat-log').innerHTML = "";
+        log("Sohbet geçmişi silindi.");
+    }
+
+    async function askSimbiot(input) {
+        const key = document.getElementById('apiKey').value;
+        const model = document.getElementById('modelSelect').value;
+        if(!key || !model) { log("Lütfen API Key ve Model seçin."); return null; }
+
+        const systemPrompt = `Sen Simbiot'sun. Ev asistanısın.
+        KOMUTLAR (Cümle sonuna ekle):
+        [POWER_SB] (Sadece Soundbar), [POWER_TV] (Sadece TV), [POWER_ALL] (Hepsi).
+        [VOL_UP], [VOL_DOWN], [MUTE], [CHANNEL:X], [NETFLIX], [YOUTUBE].
+        Normal sohbette komut ekleme.`;
+
+        const payload = {
+            contents: [
+                { role: "user", parts: [{ text: systemPrompt }] },
+                ...chatHistory,
+                { role: "user", parts: [{ text: input }] }
+            ]
+        };
+
+        try {
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${key}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            return data.candidates[0].content.parts[0].text;
+        } catch(e) { log("Gemini Cevap Vermedi."); return null; }
+    }
+
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'tr-TR';
     document.getElementById('micBtn').onclick = () => recognition.start();
     
+    recognition.onstart = () => { document.getElementById('micBtn').classList.add('listening'); };
+    recognition.onend = () => { document.getElementById('micBtn').classList.remove('listening'); };
+
     recognition.onresult = async (e) => {
         const text = e.results[0][0].transcript;
-        // Basit Gemini isteği (Kısaltıldı)
-        // ... (Burada önceki kodlardaki yapay zeka mantığı çalışır)
+        addMsg(text, "user");
+        
+        const response = await askSimbiot(text);
+        if(response) {
+            let cmd = response.match(/\[.*?\]/);
+            let speech = response.replace(/\[.*?\]/g, "").trim();
+            
+            addMsg(speech, "ai");
+            speak(speech);
+
+            if(cmd) {
+                let cleanCmd = cmd[0].replace("[","").replace("]","");
+                log("Komut: " + cleanCmd);
+                db.ref('tv_komut').set(cleanCmd);
+            }
+            
+            chatHistory.push({ role: "user", parts: [{ text: text }] }, { role: "model", parts: [{ text: response }] });
+        }
     };
+
+    function addMsg(text, type) {
+        const d = document.createElement('div');
+        d.className = `msg ${type}`; d.innerText = text;
+        document.getElementById('chat-log').prepend(d);
+    }
 </script>
 </body>
 </html>
