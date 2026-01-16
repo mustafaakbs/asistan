@@ -3,284 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simbiot v4.6 - Ultimate</title>
+    <title>Simbiot Pro v8.5</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
-        :root { --neon: #00f2ea; --bg: #0f172a; --panel-bg: rgba(255,255,255,0.05); }
+        :root { --neon: #00f2ea; --bg: #0f172a; --panel: rgba(30, 41, 59, 0.7); }
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: radial-gradient(circle at center, #111827, #000);
-            color: white; display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; margin: 0;
+            font-family: 'Segoe UI', sans-serif; background: radial-gradient(circle, #1e293b, #000);
+            color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 20px;
         }
-        .container {
-            width: 90%; max-width: 500px; padding: 20px; margin: 20px 0;
-        }
-        .logo { width: 180px; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;}
+        .container { width: 100%; max-width: 450px; }
+        .logo { width: 150px; display: block; margin: 0 auto 20px; filter: drop-shadow(0 0 10px var(--neon)); }
         
-        /* Terminal */
+        /* Terminal & Chat */
         #terminal {
-            background: #000; color: #39ff14; font-family: monospace; font-size: 0.75rem;
-            height: 80px; overflow-y: auto; padding: 10px; text-align: left;
-            border-radius: 10px; margin-bottom: 15px; border: 1px solid #333;
+            background: #000; color: #39ff14; font-family: monospace; font-size: 0.8rem;
+            height: 100px; overflow-y: auto; padding: 10px; border-radius: 10px; border: 1px solid #333; margin-bottom: 10px;
         }
+        #chat-log { height: 180px; overflow-y: auto; background: var(--panel); border-radius: 15px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; }
+        .msg { padding: 8px 12px; margin: 4px 0; border-radius: 10px; font-size: 0.9rem; max-width: 80%; }
+        .user { background: #0369a1; align-self: flex-end; }
+        .ai { background: #334155; align-self: flex-start; }
 
-        /* Paneller */
-        .panel {
-            background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 15px; padding: 15px; margin-bottom: 15px;
-        }
-        .panel h3 { margin: 0 0 10px 0; font-size: 0.9rem; color: var(--neon); text-transform: uppercase; letter-spacing: 1px; }
+        /* Ayarlar Paneli */
+        .settings-panel { background: var(--panel); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border-radius: 8px; background: #0f172a; color: white; border: 1px solid #334155; box-sizing: border-box; }
 
-        /* Form Elemanları */
-        select, input {
-            width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px;
-            background: rgba(0,0,0,0.5); color: white; border: 1px solid #444; 
-            font-size: 0.9rem; box-sizing: border-box;
-        }
-        select:focus, input:focus { border-color: var(--neon); outline: none; }
-
-        /* Butonlar */
-        .btn {
-            width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer;
-            font-weight: bold; margin-bottom: 5px; transition: 0.2s;
-        }
-        .btn-scan { background: linear-gradient(90deg, #f39c12, #e67e22); color: white; }
-        .btn-conn { background: linear-gradient(90deg, var(--neon), #00c6ff); color: #000; }
-        .btn-clear { background: transparent; border: 1px solid #e74c3c; color: #e74c3c; margin-top: 10px;}
-        .btn-clear:hover { background: rgba(231, 76, 60, 0.1); }
-
-        /* Sohbet ve Mic */
-        .mic-container { display: flex; justify-content: center; margin: 15px 0; }
+        /* Kontrol Butonları */
+        .mic-section { display: flex; justify-content: center; margin: 20px 0; }
         .mic-btn {
-            width: 75px; height: 75px; border-radius: 50%; border: none;
-            background: linear-gradient(135deg, #00c6ff, #0072ff);
-            color: white; font-size: 35px; cursor: pointer; box-shadow: 0 0 20px rgba(0,198,255,0.3);
+            width: 80px; height: 80px; border-radius: 50%; border: none;
+            background: linear-gradient(135deg, var(--neon), #00c6ff);
+            cursor: pointer; box-shadow: 0 0 20px rgba(0,242,234,0.4); transition: 0.3s;
         }
-        .mic-btn.listening { background: linear-gradient(135deg, #11998e, #38ef7d); transform: scale(1.1); box-shadow: 0 0 30px #38ef7d; }
-
-        #chat-log { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column-reverse; }
-        .msg { padding: 10px 14px; margin: 5px 0; border-radius: 12px; font-size: 0.9rem; max-width: 85%; }
-        .user { background: rgba(0, 242, 234, 0.2); align-self: flex-end; color: #fff; }
-        .ai { background: rgba(255,255,255,0.1); align-self: flex-start; color: #ddd; }
-        
-        /* Animasyon */
-        .scanning { animation: blink 1s infinite; }
-        @keyframes blink { 50% { opacity: 0.5; } }
+        .mic-btn.listening { transform: scale(1.2); background: #ef4444; box-shadow: 0 0 30px #ef4444; }
+        .btn-clear { background: transparent; border: 1px solid #ef4444; color: #ef4444; width: 100%; padding: 10px; border-radius: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <img src="logo.png" class="logo">
-    <div id="terminal">> Simbiot Sistem Başlatıldı...</div>
+    
+    <div id="terminal">> Simbiot Sistemi Aktif...</div>
 
-    <div class="panel">
-        <h3>📡 Ağ Tarayıcı</h3>
-        <button id="scanBtn" class="btn btn-scan" onclick="startScan()">TV'leri Tara (Network Scan)</button>
-        <select id="foundDevices"><option value="">Cihazlar aranıyor...</option></select>
-        <button class="btn btn-conn" onclick="saveAndConnect()">Seçili TV'ye Bağlan</button>
-    </div>
+    <div id="chat-log"></div>
 
-    <div class="panel">
-        <h3>🧠 Simbiot Beyni</h3>
-        <input type="password" id="apiKey" placeholder="Gemini API Key Girin">
-        
+    <div class="settings-panel">
+        <input type="password" id="apiKey" placeholder="Gemini API Key">
         <div style="display: flex; gap: 5px;">
-            <select id="modelSelect" onfocus="listModels()">
-                <option>Model Seçin...</option>
-            </select>
-            <select id="voiceSelect">
-                <option>Ses Yükleniyor...</option>
-            </select>
+            <select id="voiceSelect"><option>Ses Bekleniyor...</option></select>
+            <select id="modelSelect" onfocus="listModels()"><option>Model Seçin</option></select>
         </div>
     </div>
 
-    <div class="mic-container">
-        <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
+    <div class="mic-section">
+        <button id="micBtn" class="mic-btn"><i class="material-icons-round" style="font-size: 40px; color: #000;">mic_none</i></button>
     </div>
-    
-    <div id="chat-log"></div>
-    <button class="btn btn-clear" onclick="clearChat()">Sohbet Geçmişini Temizle</button>
+
+    <button class="btn-clear" onclick="clearHistory()">Geçmişi ve Sohbeti Temizle</button>
 </div>
 
 <script>
-    /* --- AYARLAR --- */
-    const firebaseConfig = {
-        apiKey: "AIzaSyAdo6LaAge-EO_Q5SPbbAdInHC0H1OvA7c",
-        authDomain: "asistan-489ec.firebaseapp.com",
-        databaseURL: "https://asistan-489ec-default-rtdb.firebaseio.com",
-        projectId: "asistan-489ec",
-        storageBucket: "asistan-489ec.firebasestorage.app",
-        messagingSenderId: "161041095710",
-        appId: "1:161041095710:web:11747cc9b9499948c9e20f"
-    };
+    // Firebase Yapılandırması
+    const firebaseConfig = { databaseURL: "https://asistan-489ec-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    let db;
-    try {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.database();
-        log("Firebase Bağlantısı Aktif.");
-        
-        // ESP Loglarını Dinle
-        db.ref('esp_log').on('value', (s) => { if(s.val()) log("ESP: " + s.val()); });
-        // Tarama Sonucunu Dinle
-        db.ref('scan_result').on('value', (snap) => {
-            const ip = snap.val();
-            if(ip && ip !== "YOK") {
-                const sel = document.getElementById('foundDevices');
-                sel.innerHTML = ""; 
-                let opt = document.createElement('option');
-                opt.value = ip; opt.text = "Bulundu! Samsung TV (" + ip + ")";
-                sel.appendChild(opt);
-                log("Cihaz Bulundu: " + ip);
-                document.getElementById('scanBtn').classList.remove('scanning');
-                document.getElementById('scanBtn').innerText = "Tekrar Tara";
-            }
-        });
-    } catch(e) { log("Firebase Hatası!"); }
+    function log(msg) { const t = document.getElementById('terminal'); t.innerHTML = `> ${msg}<br>` + t.innerHTML; }
 
-    function log(msg) {
-        const t = document.getElementById('terminal');
-        t.innerHTML = `> ${msg}<br>` + t.innerHTML;
-    }
-
-    /* --- CİHAZ TARAMA --- */
-    function startScan() {
-        log("Ağ taranıyor, lütfen bekleyin...");
-        document.getElementById('scanBtn').classList.add('scanning');
-        document.getElementById('scanBtn').innerText = "Aranıyor...";
-        db.ref('tv_komut').set('SCAN_NETWORK');
-    }
-
-    function saveAndConnect() {
-        const ip = document.getElementById('foundDevices').value;
-        if(ip) {
-            db.ref('tv/ip').set(ip);
-            db.ref('tv_komut').set('CONNECT_NOW');
-            log("Bağlanılıyor: " + ip);
-        } else {
-            log("Listeden cihaz seçin.");
-        }
-    }
-
-    /* --- YAPAY ZEKA VE SES --- */
+    // Ses ve Model Listeleme
     const synth = window.speechSynthesis;
-    let voices = [];
-    let chatHistory = [];
-
-    // Sesleri Yükle
     function loadVoices() {
-        voices = synth.getVoices();
         const sel = document.getElementById('voiceSelect');
-        sel.innerHTML = "";
-        voices.sort((a, b) => b.lang.includes('tr') - a.lang.includes('tr'));
-        voices.forEach((v, i) => {
-            let opt = document.createElement('option');
-            opt.value = i; opt.text = (v.lang.includes('tr') ? "🇹🇷 " : "") + v.name;
-            sel.appendChild(opt);
-        });
+        const voices = synth.getVoices();
+        sel.innerHTML = voices.map((v, i) => `<option value="${i}">${v.lang.includes('tr') ? '🇹🇷 ' : ''}${v.name}</option>`).join('');
     }
     if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
-    setTimeout(loadVoices, 1000);
 
-    // Modelleri Listele
     async function listModels() {
         const key = document.getElementById('apiKey').value;
         if(!key) return;
-        try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-            const data = await res.json();
-            const sel = document.getElementById('modelSelect');
-            sel.innerHTML = "";
-            data.models.forEach(m => { 
-                if(m.name.includes("flash")) { 
-                    let o = new Option(m.displayName, m.name); 
-                    sel.add(o); 
-                }
-            });
-        } catch(e) { log("API Key Hatası"); }
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+        const data = await res.json();
+        document.getElementById('modelSelect').innerHTML = data.models.filter(m => m.name.includes('flash')).map(m => `<option value="${m.name}">${m.displayName}</option>`).join('');
     }
 
-    function speak(text) {
-        if(synth.speaking) synth.cancel();
-        const utt = new SpeechSynthesisUtterance(text);
-        const vIdx = document.getElementById('voiceSelect').value;
-        if(voices[vIdx]) utt.voice = voices[vIdx];
-        synth.speak(utt);
-    }
-
-    /* --- SOHBET VE LOGIC --- */
-    function clearChat() {
-        chatHistory = [];
-        document.getElementById('chat-log').innerHTML = "";
-        log("Sohbet geçmişi silindi.");
-    }
-
-    async function askSimbiot(input) {
+    // Gemini Bağlantısı ve Komut Analizi
+    let chatHistory = [];
+    async function askGemini(text) {
         const key = document.getElementById('apiKey').value;
         const model = document.getElementById('modelSelect').value;
-        if(!key || !model) { log("Lütfen API Key ve Model seçin."); return null; }
-
-        const systemPrompt = `Sen Simbiot'sun. Ev asistanısın.
+        
+        // Simbiot'un "Zekası" ve "Komut Kitaplığı"
+        const systemPrompt = `Sen Simbiot'sun. Ev asistanısın. Kullanıcıyı anla ve komut üret.
         KOMUTLAR (Cümle sonuna ekle):
-        [POWER_SB] (Sadece Soundbar), [POWER_TV] (Sadece TV), [POWER_ALL] (Hepsi).
-        [VOL_UP], [VOL_DOWN], [MUTE], [CHANNEL:X], [NETFLIX], [YOUTUBE].
-        Normal sohbette komut ekleme.`;
+        - Televizyonu/Ses sistemini aç/kapat: [POWER_TV], [POWER_SB]
+        - Sesi arttır/azalt (5 kademe): [VOL_UP_5], [VOL_DOWN_5]
+        - Kanal ileri/geri: [CH_UP], [CH_DOWN]
+        - Kanal 15 (veya herhangi rakam) git: [CH_15]
+        - Uygulamalar: [NETFLIX], [YOUTUBE], [BROWSER]
+        Örn: "Sesi arttır" -> "Tabii sesi açıyorum. [VOL_UP_5]"`;
 
         const payload = {
-            contents: [
-                { role: "user", parts: [{ text: systemPrompt }] },
-                ...chatHistory,
-                { role: "user", parts: [{ text: input }] }
-            ]
+            contents: [{ role: "user", parts: [{ text: systemPrompt }] }, ...chatHistory, { role: "user", parts: [{ text: text }] }]
         };
 
-        try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${key}`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            return data.candidates[0].content.parts[0].text;
-        } catch(e) { log("Gemini Cevap Vermedi."); return null; }
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${key}`, {
+            method: 'POST', body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        return data.candidates[0].content.parts[0].text;
     }
 
+    // Sesli Komut Başlatma
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'tr-TR';
+
     document.getElementById('micBtn').onclick = () => recognition.start();
-    
-    recognition.onstart = () => { document.getElementById('micBtn').classList.add('listening'); };
-    recognition.onend = () => { document.getElementById('micBtn').classList.remove('listening'); };
+    recognition.onstart = () => document.getElementById('micBtn').classList.add('listening');
+    recognition.onend = () => document.getElementById('micBtn').classList.remove('listening');
 
     recognition.onresult = async (e) => {
         const text = e.results[0][0].transcript;
-        addMsg(text, "user");
+        addMsg(text, 'user');
         
-        const response = await askSimbiot(text);
-        if(response) {
-            let cmd = response.match(/\[.*?\]/);
-            let speech = response.replace(/\[.*?\]/g, "").trim();
-            
-            addMsg(speech, "ai");
-            speak(speech);
+        const response = await askGemini(text);
+        const cmd = response.match(/\[(.*?)\]/);
+        const replyText = response.replace(/\[.*?\]/g, "").trim();
 
-            if(cmd) {
-                let cleanCmd = cmd[0].replace("[","").replace("]","");
-                log("Komut: " + cleanCmd);
-                db.ref('tv_komut').set(cleanCmd);
-            }
-            
-            chatHistory.push({ role: "user", parts: [{ text: text }] }, { role: "model", parts: [{ text: response }] });
+        addMsg(replyText, 'ai');
+        speak(replyText);
+
+        if(cmd) {
+            log("Komut: " + cmd[1]);
+            db.ref('tv_komut').set(cmd[1]);
         }
+        chatHistory.push({ role: "user", parts: [{ text: text }] }, { role: "model", parts: [{ text: response }] });
     };
 
     function addMsg(text, type) {
         const d = document.createElement('div');
         d.className = `msg ${type}`; d.innerText = text;
-        document.getElementById('chat-log').prepend(d);
+        const chat = document.getElementById('chat-log');
+        chat.appendChild(d); chat.scrollTop = chat.scrollHeight;
+    }
+
+    function speak(text) {
+        const msg = new SpeechSynthesisUtterance(text);
+        const voices = synth.getVoices();
+        msg.voice = voices[document.getElementById('voiceSelect').value];
+        synth.speak(msg);
+    }
+
+    function clearHistory() {
+        chatHistory = [];
+        document.getElementById('chat-log').innerHTML = "";
+        log("Geçmiş temizlendi.");
     }
 </script>
 </body>
