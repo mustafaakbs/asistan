@@ -86,13 +86,6 @@
 </div>
 
 <script>
-    const logRef = database.ref("esp32_log");
-
-logRef.limitToLast(10).on("child_added", s => {
-    addMsg("🛠 ESP32: " + s.val(), "ai");
-});
-    let commandLock = false;
-
     // --- 1. FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyAdo6LaAge-EO_Q5SPbbAdInHC0H1OvA7c",
@@ -113,10 +106,10 @@ logRef.limitToLast(10).on("child_added", s => {
     } catch(e) { console.error(e); }
 
     function sendTV(command) {
-    if (!database || commandLock === false) return;
-    database.ref('tv_komut').set(command);
-    addMsg("📡 Sinyal: " + command, "tv-cmd");
-}
+        if(database) {
+            database.ref('tv_komut').set(command);
+            addMsg("📡 Sinyal: " + command, "tv-cmd");
+        }
     }
 
     // --- 2. TEMEL DEĞİŞKENLER ---
@@ -224,8 +217,6 @@ logRef.limitToLast(10).on("child_added", s => {
         addMsg(text, "user");
         chatHistory.push({ role: "user", parts: [{ text: text }] });
         
-        commandLock = true;
-setTimeout(() => commandLock = false, 1500); // 1.5 sn sadece 1 komut
         const response = await askGemini();
         
         if(response) {
@@ -247,8 +238,6 @@ setTimeout(() => commandLock = false, 1500); // 1.5 sn sadece 1 komut
                 { tag: "[UP]", cmd: "UP" }, { tag: "[DOWN]", cmd: "DOWN" },
                 { tag: "[LEFT]", cmd: "LEFT" }, { tag: "[RIGHT]", cmd: "RIGHT" },
                 { tag: "[SOURCE]", cmd: "SOURCE" }
-                { tag: "[POWER_TV_IR]", cmd: "POWER_TV_IR" },
-                { tag: "[POWER_SB_IR]", cmd: "POWER_SB_IR" },
             ];
 
             map.forEach(m => {
