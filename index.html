@@ -3,361 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIMBIOT PRIME // AI INTERFACE</title>
+    <title>Simbiot Kontrol Paneli</title>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
     <style>
-        :root {
-            --neon-blue: #00f3ff;
-            --neon-pink: #ff0055;
-            --bg-dark: #050a14;
-            --glass: rgba(10, 20, 30, 0.7);
-            --border: 1px solid rgba(0, 243, 255, 0.3);
-        }
-
         body {
-            background-color: var(--bg-dark);
-            background-image: 
-                radial-gradient(circle at 50% 0%, #1a2c4e 0%, transparent 50%),
-                linear-gradient(0deg, transparent 95%, rgba(0, 243, 255, 0.03) 100%);
-            background-size: cover;
-            color: #fff;
-            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden;
+            color: #333;
         }
-
-        /* Ana Çerçeve - Holografik Görünüm */
-        .interface-container {
+        .container {
             width: 100%;
-            max-width: 480px;
-            height: 95vh;
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            border: var(--border);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            box-sizing: border-box;
-            position: relative;
+            max-width: 420px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             overflow: hidden;
-        }
-
-        /* Logo Alanı */
-        .header {
-            text-align: center;
-            margin-bottom: 15px;
-            position: relative;
-        }
-
-        .logo {
-            height: 60px;
-            filter: drop-shadow(0 0 10px var(--neon-blue));
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .status-badge {
-            font-size: 10px;
-            letter-spacing: 2px;
-            color: var(--neon-blue);
-            text-transform: uppercase;
-            margin-top: 5px;
-            text-shadow: 0 0 5px var(--neon-blue);
-        }
-
-        /* Terminal (Matrix) Ekranı */
-        .terminal {
-            background: #000;
-            border: 1px solid #333;
-            color: var(--neon-blue);
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            height: 80px;
-            padding: 10px;
-            border-radius: 8px;
-            overflow-y: hidden;
-            margin-bottom: 15px;
-            position: relative;
-        }
-        .terminal::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-        }
-
-        /* Sohbet Alanı */
-        .chat-area {
-            flex: 1;
-            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            padding-right: 5px;
-            margin-bottom: 15px;
-            scrollbar-width: thin;
+            height: 90vh;
         }
         
+        /* Üst Başlık */
+        .header {
+            padding: 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+        .header h1 { margin: 0; font-size: 20px; color: #1a1a1a; }
+        .status { font-size: 12px; color: #4CAF50; margin-top: 5px; display: block; }
+
+        /* Sohbet Alanı */
+        .chat-box {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f7f9fc;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
         .msg {
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            line-height: 1.5;
-            max-width: 85%;
-            animation: fadeIn 0.3s ease;
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.4;
+            max-width: 80%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
+        .user { background: #007AFF; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .ai { background: #ffffff; color: #333; align-self: flex-start; border-bottom-left-radius: 4px; }
 
-        .user {
-            background: linear-gradient(135deg, rgba(0, 243, 255, 0.2), rgba(0, 243, 255, 0.05));
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            align-self: flex-end;
-            color: #fff;
-            border-bottom-right-radius: 2px;
-        }
-
-        .ai {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            align-self: flex-start;
-            color: #ccc;
-            border-bottom-left-radius: 2px;
-        }
-
-        /* Kontrol Paneli */
-        .controls {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 15px;
-            border-radius: 15px;
-            border: var(--border);
-        }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        input, select {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid #333;
-            color: var(--neon-blue);
-            padding: 10px;
-            border-radius: 8px;
-            width: 100%;
-            font-family: 'Segoe UI', sans-serif;
-            outline: none;
-        }
-        input:focus, select:focus { border-color: var(--neon-blue); }
-
-        /* Mikrofon Butonu */
-        .mic-wrapper {
-            display: flex;
-            justify-content: center;
-            position: relative;
-            margin-top: 10px;
-        }
-
+        /* Kontrol Alanı */
+        .controls { padding: 20px; background: white; border-top: 1px solid #eee; }
+        
         .mic-btn {
-            width: 70px;
-            height: 70px;
+            width: 70px; height: 70px;
+            background: #007AFF;
             border-radius: 50%;
-            background: transparent;
-            border: 2px solid var(--neon-blue);
-            color: var(--neon-blue);
+            border: none;
+            color: white;
             font-size: 32px;
             cursor: pointer;
-            box-shadow: 0 0 15px var(--neon-blue), inset 0 0 10px var(--neon-blue);
-            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(0,122,255,0.3);
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: center; justify-content: center;
+            margin: 0 auto 15px auto;
+            transition: transform 0.2s;
         }
+        .mic-btn:active { transform: scale(0.95); }
+        .mic-btn.listening { background: #FF3B30; animation: pulse 1.5s infinite; }
 
-        .mic-btn:hover { background: rgba(0, 243, 255, 0.1); }
+        @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(255,59,48,0.4);} 70% {box-shadow: 0 0 0 15px rgba(255,59,48,0);} 100% {box-shadow: 0 0 0 0 rgba(255,59,48,0);} }
 
-        .mic-btn.listening {
-            border-color: var(--neon-pink);
-            color: var(--neon-pink);
-            box-shadow: 0 0 25px var(--neon-pink), inset 0 0 15px var(--neon-pink);
-            animation: pulse 1.5s infinite;
+        /* Ayarlar */
+        .settings-toggle {
+            text-align: center; font-size: 12px; color: #888; cursor: pointer; margin-bottom: 10px;
         }
-
-        /* Animasyonlar */
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
+        .settings-panel {
+            display: none; background: #f1f1f1; padding: 15px; border-radius: 12px; margin-bottom: 15px;
+        }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin-bottom: 5px; }
+        
+        /* Manuel Butonlar */
+        .manual-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .m-btn { padding: 10px; background: #eee; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
+        .m-btn:active { background: #ddd; }
     </style>
 </head>
 <body>
 
-<div class="interface-container">
+<div class="container">
     <div class="header">
-        <img src="logo.png" alt="SIMBIOT" class="logo" onerror="this.style.display='none'">
-        <div class="status-badge">● SIMBIOT ONLINE</div>
+        <h1>Simbiot Kontrol</h1>
+        <span class="status">● Sistem Çevrimiçi</span>
     </div>
 
-    <div class="terminal" id="terminal">
-        > SYSTEM_INIT... OK<br>
-        > FIREBASE_LINK... OK<br>
-        > WAITING_FOR_INPUT_
-    </div>
-
-    <div class="chat-area" id="chat">
-        <div class="msg ai">Simbiot v10 Aktif. Emret komutan.</div>
+    <div id="chat" class="chat-box">
+        <div class="msg ai">Merhaba! Ben Simbiot. Nasıl yardımcı olabilirim?</div>
     </div>
 
     <div class="controls">
-        <input type="password" id="apiKey" placeholder="Gemini API Key Girin" onchange="loadModels()">
+        <div class="settings-toggle" onclick="toggleSettings()">⚙️ API Ayarları</div>
         
-        <div class="input-group">
-            <select id="modelSelect"><option>Model Bekleniyor...</option></select>
-            <select id="voiceSelect"><option>Sesler...</option></select>
+        <div id="settings" class="settings-panel">
+            <input type="password" id="apiKey" placeholder="Gemini API Anahtarını Yapıştır">
+            <button class="m-btn" style="width:100%; background:#4CAF50; color:white;" onclick="saveKey()">Kaydet</button>
         </div>
 
-        <div class="mic-wrapper">
-            <button id="micBtn" class="mic-btn">
-                <i class="material-icons-round">mic</i>
-            </button>
+        <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
+
+        <div class="manual-grid">
+            <button class="m-btn" onclick="sendCmd('POWER_TV')">TV Güç</button>
+            <button class="m-btn" onclick="sendCmd('MUTE')">Sessiz</button>
+            <button class="m-btn" onclick="sendCmd('POWER_SB')">Soundbar</button>
+            <button class="m-btn" onclick="sendCmd('VOL_DN')">Ses -</button>
+            <button class="m-btn" onclick="sendCmd('OK')">OK</button>
+            <button class="m-btn" onclick="sendCmd('VOL_UP')">Ses +</button>
         </div>
     </div>
 </div>
 
 <script>
-    // --- FIREBASE BAĞLANTISI ---
+    // --- FIREBASE ---
     const firebaseConfig = { databaseURL: "https://asistan-489ec-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function log(msg) {
-        const t = document.getElementById('terminal');
-        t.innerHTML = `> ${msg}<br>` + t.innerHTML;
+    // --- AYARLAR & API KEY KAYDETME ---
+    const savedKey = localStorage.getItem('geminiKey');
+    if(savedKey) document.getElementById('apiKey').value = savedKey;
+
+    function toggleSettings() {
+        const s = document.getElementById('settings');
+        s.style.display = s.style.display === 'block' ? 'none' : 'block';
     }
 
-    // --- SES SENTEZLEYİCİ (TTS) ---
-    const synth = window.speechSynthesis;
-    
-    function loadVoices() {
-        const voices = synth.getVoices();
-        const sel = document.getElementById('voiceSelect');
-        sel.innerHTML = voices.map((v, i) => `<option value="${i}">${v.lang.includes('tr') ? '🇹🇷 ' : ''}${v.name}</option>`).join('');
-        // Türkçe sesi bul ve seç
-        const tr = voices.findIndex(v => v.lang.includes('tr'));
-        if(tr > -1) sel.value = tr;
-    }
-    if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices; else loadVoices();
-
-    function speak(text) {
-        if(!text) return;
-        const u = new SpeechSynthesisUtterance(text);
-        u.voice = synth.getVoices()[document.getElementById('voiceSelect').value];
-        u.rate = 1.0;
-        synth.speak(u);
-    }
-
-    // --- GEMINI MODELLERİNİ ÇEKME ---
-    async function loadModels() {
+    function saveKey() {
         const key = document.getElementById('apiKey').value;
-        if(!key) return;
-        try {
-            log("FETCHING_MODELS...");
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-            const data = await res.json();
-            const select = document.getElementById('modelSelect');
-            // Sadece Flash ve Pro modellerini filtrele
-            select.innerHTML = data.models
-                .filter(m => m.name.includes('gemini'))
-                .map(m => `<option value="${m.name}">${m.displayName}</option>`)
-                .join('');
-            log("MODELS_LOADED");
-        } catch(e) { log("API_ERROR"); }
+        if(key) {
+            localStorage.setItem('geminiKey', key);
+            alert("API Anahtarı kaydedildi!");
+            toggleSettings();
+        }
     }
 
-    // --- GEMINI SORGU ---
+    // --- MANUEL KOMUT ---
+    function sendCmd(cmd) {
+        db.ref('tv_komut').set(cmd);
+        addMsg("Komut gönderildi: " + cmd, 'user');
+    }
+
+    // --- YAPAY ZEKA ---
     async function askGemini(text) {
-        const key = document.getElementById('apiKey').value;
-        const model = document.getElementById('modelSelect').value;
-        
-        if(!key || !model) { addMsg("API Key veya Model eksik!", 'ai'); return; }
+        const key = localStorage.getItem('geminiKey');
+        if(!key) { addMsg("Lütfen önce API Anahtarını ayarlardan kaydedin!", 'ai'); return; }
 
         const prompt = `
-        Sen SIMBIOT, fütüristik bir yapay zeka asistanısın. Kısa, zeki ve havalı cevaplar ver.
-        Kullanıcının içinde geçen sayıları (ses, kanal) algıla.
-        KOMUTLARI CEVABIN SONUNA [KÖŞELİ PARANTEZ] İÇİNDE EKLE.
-        
+        Sen ev asistanısın. Kısa cevap ver.
+        Aşağıdaki komutları cümle sonuna [KÖŞELİ PARANTEZ] içinde ekle.
+        Sayıları algıla.
         KOMUTLAR:
-        [VOL_UP_X], [VOL_DN_X] (X=Sayı)
-        [CH_X] (X=Kanal No), [CH_UP], [CH_DN]
+        [VOL_UP], [VOL_DN] (Sayı yoksa tek, varsa [VOL_UP_10])
+        [CH_UP], [CH_DN], [CH_15] (Kanal no)
         [MUTE], [POWER_TV], [POWER_SB]
         [NETFLIX], [YOUTUBE], [WEB]
-        [HOME], [OK], [BACK]
-
-        Örn: "Sesi 20 yap" -> "Ses maksimuma yaklaşıyor. [VOL_UP_20]"
+        [HOME], [BACK], [OK]
+        
+        Kullanıcı: "${text}"
         `;
 
-        const body = {
-            contents: [
-                { role: "user", parts: [{ text: prompt }] },
-                { role: "user", parts: [{ text: text }] }
-            ]
-        };
-
         try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/${model}:generateContent?key=${key}`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
             });
             const data = await res.json();
             return data.candidates[0].content.parts[0].text;
-        } catch(e) { return "Bağlantı hatası [ERROR]"; }
+        } catch(e) { return "Hata oluştu. API anahtarını kontrol edin."; }
     }
 
-    // --- MİKROFON İŞLEMLERİ ---
+    // --- SES İŞLEME ---
+    const micBtn = document.getElementById('micBtn');
     const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     rec.lang = 'tr-TR';
-    const btn = document.getElementById('micBtn');
 
-    btn.onclick = () => { rec.start(); };
-    rec.onstart = () => { btn.classList.add('listening'); log("LISTENING..."); };
-    rec.onend = () => { btn.classList.remove('listening'); log("PROCESSING..."); };
+    micBtn.onclick = () => rec.start();
+    rec.onstart = () => micBtn.classList.add('listening');
+    rec.onend = () => micBtn.classList.remove('listening');
 
     rec.onresult = async (e) => {
         const text = e.results[0][0].transcript;
         addMsg(text, 'user');
-
+        
         const response = await askGemini(text);
-        if(!response) return;
-
-        // --- REGEX TEMİZLİK ---
-        const cmdMatch = response.match(/\[(.*?)\]/); // [KOMUT] yakala
-        const cleanText = response.replace(/\[.*?\]/g, "").trim(); // Komutu sil
-
+        
+        // Komutu ayıkla ve temiz metni konuş
+        const cmdMatch = response.match(/\[(.*?)\]/);
+        const cleanText = response.replace(/\[.*?\]/g, "").trim();
+        
         addMsg(cleanText, 'ai');
         speak(cleanText);
 
         if(cmdMatch) {
             const cmd = cmdMatch[1];
-            log(`EXECUTING: ${cmd}`);
             db.ref('tv_komut').set(cmd);
         }
     };
 
     function addMsg(txt, type) {
-        const div = document.createElement('div');
-        div.className = `msg ${type}`;
-        div.innerText = txt;
-        const chat = document.getElementById('chat');
-        chat.appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
+        const d = document.createElement('div');
+        d.className = `msg ${type}`; d.innerText = txt;
+        document.getElementById('chat').appendChild(d);
+        document.getElementById('chat').scrollTop = 9999;
+    }
+
+    function speak(txt) {
+        const u = new SpeechSynthesisUtterance(txt);
+        window.speechSynthesis.speak(u);
     }
 </script>
 </body>
