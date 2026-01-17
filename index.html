@@ -2,209 +2,329 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SIMBIOT v12 MOBILE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <title>Simbiot Mobile</title>
+    
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
+        /* --- TEMEL AYARLAR --- */
         :root {
-            --primary: #00f3ff;
-            --bg: #0a0a12;
-            --glass: rgba(20, 20, 30, 0.95);
-            --border: 1px solid rgba(0, 243, 255, 0.2);
+            --primary: #00f0ff; /* Neon Mavi */
+            --bg-dark: #050508;
+            --panel: #14141a;
+            --user-msg: #005c7a;
+            --ai-msg: #1f1f26;
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
-            background: var(--bg); color: white; font-family: 'Rajdhani', sans-serif;
-            margin: 0; padding: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column;
+            margin: 0; padding: 0;
+            background-color: var(--bg-dark);
+            font-family: 'Rajdhani', sans-serif;
+            color: white;
+            height: 100dvh; /* Dinamik yükseklik */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        /* Üst Bar */
-        .top-bar {
-            padding: 15px; background: rgba(0,0,0,0.5); border-bottom: var(--border);
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .logo { font-family: 'Orbitron'; color: var(--primary); font-size: 18px; letter-spacing: 2px; }
-        .status { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 10px var(--primary); }
-
-        /* Sohbet Alanı */
-        .chat-container {
-            flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px;
-            background: radial-gradient(circle at center, #111 0%, #000 100%);
-        }
-        .msg { padding: 10px 15px; border-radius: 12px; max-width: 80%; font-size: 16px; line-height: 1.4; }
-        .user { align-self: flex-end; background: #004d61; border: 1px solid var(--primary); color: white; }
-        .ai { align-self: flex-start; background: #222; border: 1px solid #444; color: #ddd; }
-
-        /* Alt Kontrol Barı */
-        .bottom-bar {
-            padding: 15px; background: #111; border-top: var(--border);
-            display: flex; justify-content: center; gap: 20px; align-items: center; position: relative;
-        }
-
-        .action-btn {
-            background: none; border: none; color: #666; font-size: 28px; cursor: pointer; transition: 0.3s;
-        }
-        .action-btn:hover { color: var(--primary); }
-
-        .mic-btn {
-            width: 65px; height: 65px; border-radius: 50%; background: transparent;
-            border: 2px solid var(--primary); color: var(--primary); font-size: 30px;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
-        }
-        .mic-btn.listening { border-color: #ff0055; color: #ff0055; box-shadow: 0 0 25px #ff0055; animation: pulse 1s infinite; }
-
-        /* --- KUMANDA MODU (OVERLAY) --- */
-        .remote-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 5, 10, 0.98); z-index: 999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        /* --- ÜST BAR (HEADER) --- */
+        header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: rgba(20, 20, 26, 0.95);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.1);
             backdrop-filter: blur(10px);
+            z-index: 10;
         }
-        .remote-overlay.active { transform: translateY(0); }
+        
+        .brand { font-size: 20px; font-weight: 700; color: var(--primary); letter-spacing: 1px; }
+        .status-dot { width: 8px; height: 8px; background: #0f0; border-radius: 50%; box-shadow: 0 0 8px #0f0; }
+
+        /* --- SOHBET ALANI --- */
+        #chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            padding-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: radial-gradient(circle at 50% 50%, #0a0a0f 0%, #000 100%);
+        }
+
+        .msg {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 16px;
+            line-height: 1.4;
+            max-width: 85%;
+            word-wrap: break-word;
+        }
+        .user { align-self: flex-end; background: var(--user-msg); border-bottom-right-radius: 4px; border: 1px solid rgba(0,240,255,0.2); }
+        .ai { align-self: flex-start; background: var(--ai-msg); border-bottom-left-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
+
+        /* --- ALT KONTROL BARI --- */
+        footer {
+            height: 80px;
+            background: var(--panel);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom); /* iPhone X+ uyumu */
+            border-top: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .nav-btn {
+            background: none; border: none; color: #888;
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            font-size: 10px; font-family: sans-serif; cursor: pointer;
+        }
+        .nav-btn i { font-size: 28px; }
+        .nav-btn.active { color: var(--primary); }
+
+        /* Mikrofon Butonu (Yüzen) */
+        .mic-fab {
+            width: 65px; height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #00a8ff);
+            border: none;
+            color: #000;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+            position: absolute;
+            top: -30px; left: 50%; transform: translateX(-50%);
+            transition: 0.2s;
+        }
+        .mic-fab:active { transform: translateX(-50%) scale(0.9); }
+        .mic-fab.listening { background: #ff004c; animation: pulse 1.5s infinite; color: white; }
+
+        /* --- KUMANDA MODU (TAM EKRAN OVERLAY) --- */
+        #remote-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 8, 0.98);
+            z-index: 100;
+            display: flex; flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        #remote-overlay.open { transform: translateY(0); }
+
+        .remote-header {
+            padding: 20px; text-align: center; position: relative;
+            border-bottom: 1px solid #222;
+        }
+        .close-btn {
+            position: absolute; right: 20px; top: 20px;
+            background: none; border: none; color: white; font-size: 30px;
+        }
 
         .remote-grid {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 20px;
-            width: 80%; max-width: 350px;
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 20px;
+            overflow-y: auto;
+            align-content: center; /* Dikey ortala */
         }
 
         .r-btn {
-            padding: 20px; background: #1a1a24; border: 1px solid #333; color: white;
-            border-radius: 12px; font-family: 'Orbitron'; font-size: 14px; cursor: pointer;
+            aspect-ratio: 1/0.7; /* Dikdörtgen tuşlar */
+            background: #1a1a20;
+            border: 1px solid #333;
+            border-radius: 12px;
+            color: #ccc;
+            font-size: 14px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-weight: bold;
+            -webkit-tap-highlight-color: transparent;
         }
-        .r-btn:active { background: var(--primary); color: black; }
-        .r-btn i { font-size: 24px; margin-bottom: 5px; }
-        .red { color: #ff4444; border-color: #ff4444; }
-        .close-remote {
-            position: absolute; top: 20px; right: 20px;
-            background: none; border: none; color: white; font-size: 30px; cursor: pointer;
-        }
-        
-        /* Ayarlar Modalı */
-        .settings-modal {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 80%; background: #1a1a24; border: var(--border); padding: 20px;
-            border-radius: 15px; z-index: 1000; display: none; text-align: center;
-        }
-        .input-box { width: 90%; padding: 10px; background: black; border: 1px solid #444; color: white; margin-bottom: 10px; }
-        .save-btn { width: 100%; padding: 10px; background: var(--primary); border: none; font-weight: bold; cursor: pointer; }
+        .r-btn:active { background: var(--primary); color: #000; border-color: var(--primary); }
+        .r-btn i { font-size: 24px; margin-bottom: 4px; }
+        .r-btn.red { color: #ff4455; border-color: rgba(255, 68, 85, 0.3); }
 
-        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
+        /* --- AYARLAR MODAL --- */
+        #settings-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 200;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: #1a1a20; width: 85%; padding: 20px; border-radius: 20px;
+            border: 1px solid #333;
+        }
+        input, select {
+            width: 100%; padding: 12px; margin-bottom: 10px;
+            background: #000; border: 1px solid #444; color: white; border-radius: 8px;
+            font-size: 16px; /* Mobilde zoom yapmaması için 16px */
+        }
+        .save-btn {
+            width: 100%; padding: 12px; background: var(--primary); border: none;
+            border-radius: 8px; font-weight: bold; font-size: 16px;
+        }
+
+        @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(255, 0, 76, 0.7);} 70% {box-shadow: 0 0 0 20px rgba(255, 0, 76, 0);} 100% {box-shadow: 0 0 0 0 rgba(255, 0, 76, 0);} }
     </style>
 </head>
 <body>
 
-<div id="settingsModal" class="settings-modal">
-    <h3>SİSTEM AYARLARI</h3>
-    <input type="password" id="apiKey" class="input-box" placeholder="Gemini API Key">
-    <button onclick="fetchModels()" style="width:100%; margin-bottom:10px; background:#333; color:white; border:none; padding:8px;">Modelleri Güncelle</button>
-    <select id="modelSelect" class="input-box"></select>
-    <select id="voiceSelect" class="input-box"></select>
-    <button class="save-btn" onclick="saveSettings()">KAYDET & KAPAT</button>
-</div>
+    <header>
+        <div class="brand">SIMBIOT v13</div>
+        <div class="status-dot"></div>
+    </header>
 
-<div id="remoteOverlay" class="remote-overlay">
-    <button class="close-remote" onclick="toggleRemote()"><i class="material-icons-round">expand_more</i></button>
-    <h2 style="font-family:'Orbitron'; color:var(--primary); margin-bottom:30px;">MANUEL KONTROL</h2>
-    
-    <div class="remote-grid">
-        <button class="r-btn red" onclick="send('POWER_TV')"><i class="material-icons-round">power_settings_new</i>TV</button>
-        <button class="r-btn" onclick="send('HOME')"><i class="material-icons-round">home</i>MENU</button>
-        <button class="r-btn red" onclick="send('POWER_SB')"><i class="material-icons-round">speaker</i>SB</button>
-
-        <button class="r-btn" onclick="send('VOL_UP')"><i class="material-icons-round">volume_up</i>VOL+</button>
-        <button class="r-btn" onclick="send('UP')"><i class="material-icons-round">keyboard_arrow_up</i></button>
-        <button class="r-btn" onclick="send('CH_UP')"><i class="material-icons-round">add_circle</i>CH+</button>
-
-        <button class="r-btn" onclick="send('LEFT')"><i class="material-icons-round">keyboard_arrow_left</i></button>
-        <button class="r-btn" style="background:var(--primary); color:black;" onclick="send('OK')">OK</button>
-        <button class="r-btn" onclick="send('RIGHT')"><i class="material-icons-round">keyboard_arrow_right</i></button>
-
-        <button class="r-btn" onclick="send('VOL_DN')"><i class="material-icons-round">volume_down</i>VOL-</button>
-        <button class="r-btn" onclick="send('DOWN')"><i class="material-icons-round">keyboard_arrow_down</i></button>
-        <button class="r-btn" onclick="send('CH_DN')"><i class="material-icons-round">remove_circle</i>CH-</button>
-        
-        <button class="r-btn" onclick="send('NETFLIX')">NETFLIX</button>
-        <button class="r-btn" onclick="send('BACK')">GERİ</button>
-        <button class="r-btn" onclick="send('YOUTUBE')">YOUTUBE</button>
+    <div id="chat-area">
+        <div class="msg ai">Simbiot Mobile hazır. Mikrofon butonuna basabilir veya kumandayı açabilirsin.</div>
     </div>
-</div>
 
-<div class="top-bar">
-    <div class="logo">SIMBIOT v12</div>
-    <div class="status"></div>
-</div>
+    <footer>
+        <button class="nav-btn" onclick="openSettings()">
+            <i class="material-icons-round">settings</i>
+            <span>Ayarlar</span>
+        </button>
+        
+        <button id="micBtn" class="mic-fab">
+            <i class="material-icons-round">mic</i>
+        </button>
 
-<div id="chat" class="chat-container">
-    <div class="msg ai">Simbiot Mobile hazır. Mikrofonu kullan veya kumandayı aç.</div>
-</div>
+        <button class="nav-btn" onclick="openRemote()">
+            <i class="material-icons-round">grid_view</i>
+            <span>Kumanda</span>
+        </button>
+    </footer>
 
-<div class="bottom-bar">
-    <button class="action-btn" onclick="openSettings()"><i class="material-icons-round">settings</i></button>
-    
-    <button id="micBtn" class="mic-btn"><i class="material-icons-round">mic</i></button>
-    
-    <button class="action-btn" onclick="toggleRemote()"><i class="material-icons-round">grid_view</i></button>
-</div>
+    <div id="remote-overlay">
+        <div class="remote-header">
+            <span style="font-size:18px; color:var(--primary); font-weight:bold;">MANUEL KONTROL</span>
+            <button class="close-btn" onclick="closeRemote()"><i class="material-icons-round">expand_more</i></button>
+        </div>
+
+        <div class="remote-grid">
+            <button class="r-btn red" onclick="send('POWER_TV')"><i class="material-icons-round">power_settings_new</i>TV</button>
+            <button class="r-btn" onclick="send('HOME')"><i class="material-icons-round">home</i>MENÜ</button>
+            <button class="r-btn red" onclick="send('POWER_SB')"><i class="material-icons-round">speaker</i>SB</button>
+
+            <button class="r-btn" onclick="send('VOL_UP')"><i class="material-icons-round">volume_up</i>SES+</button>
+            <button class="r-btn" onclick="send('UP')"><i class="material-icons-round">keyboard_arrow_up</i></button>
+            <button class="r-btn" onclick="send('CH_UP')"><i class="material-icons-round">add_circle</i>P+</button>
+
+            <button class="r-btn" onclick="send('LEFT')"><i class="material-icons-round">keyboard_arrow_left</i></button>
+            <button class="r-btn" style="background:var(--primary); color:#000;" onclick="send('OK')">OK</button>
+            <button class="r-btn" onclick="send('RIGHT')"><i class="material-icons-round">keyboard_arrow_right</i></button>
+
+            <button class="r-btn" onclick="send('VOL_DN')"><i class="material-icons-round">volume_down</i>SES-</button>
+            <button class="r-btn" onclick="send('DOWN')"><i class="material-icons-round">keyboard_arrow_down</i></button>
+            <button class="r-btn" onclick="send('CH_DN')"><i class="material-icons-round">remove_circle</i>P-</button>
+
+            <button class="r-btn" onclick="send('NETFLIX')">NETFLIX</button>
+            <button class="r-btn" onclick="send('BACK')"><i class="material-icons-round">undo</i>GERİ</button>
+            <button class="r-btn" onclick="send('YOUTUBE')">YOUTUBE</button>
+        </div>
+    </div>
+
+    <div id="settings-modal" onclick="if(event.target==this) closeSettings()">
+        <div class="modal-content">
+            <h3 style="margin-top:0">Sistem Ayarları</h3>
+            <label style="font-size:12px; color:#888;">GEMINI API KEY</label>
+            <input type="password" id="apiKey" placeholder="Anahtarını buraya yapıştır">
+            
+            <button onclick="fetchModels()" style="width:100%; margin-bottom:10px; background:#333; color:white; border:none; padding:10px; border-radius:8px;">Modelleri Güncelle</button>
+            
+            <label style="font-size:12px; color:#888;">YAPAY ZEKA MODELİ</label>
+            <select id="modelSelect"></select>
+            
+            <label style="font-size:12px; color:#888;">ASİSTAN SESİ</label>
+            <select id="voiceSelect"></select>
+
+            <button class="save-btn" onclick="saveSettings()">KAYDET VE KAPAT</button>
+        </div>
+    </div>
 
 <script>
-    // --- FIREBASE ---
+    // --- FIREBASE BAĞLANTISI ---
     const firebaseConfig = { databaseURL: "https://asistan-489ec-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function send(cmd) { db.ref('tv_komut').set(cmd); }
+    function send(cmd) {
+        // Tık sesi efekti eklenebilir
+        if(navigator.vibrate) navigator.vibrate(50); // Titreşim efekti
+        db.ref('tv_komut').set(cmd);
+    }
 
-    // --- UI FONKSİYONLARI ---
-    function toggleRemote() {
-        document.getElementById('remoteOverlay').classList.toggle('active');
-    }
-    function openSettings() {
-        document.getElementById('settingsModal').style.display = 'block';
-    }
+    // --- UI YÖNETİMİ ---
+    function openRemote() { document.getElementById('remote-overlay').classList.add('open'); }
+    function closeRemote() { document.getElementById('remote-overlay').classList.remove('open'); }
+    function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+    function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+
+    // --- AYARLAR VE HAFIZA ---
+    window.onload = () => {
+        const k = localStorage.getItem('simbiot_key');
+        const m = localStorage.getItem('simbiot_model');
+        if(k) document.getElementById('apiKey').value = k;
+        
+        // Sesleri yükle
+        loadVoices();
+        
+        // Eğer model kayıtlıysa listeye ekle
+        if(m) {
+            const s = document.getElementById('modelSelect');
+            const o = document.createElement('option'); o.value=m; o.text=m+" (Kayıtlı)";
+            s.add(o); s.value=m;
+        }
+    };
+
     function saveSettings() {
-        const key = document.getElementById('apiKey').value;
-        const model = document.getElementById('modelSelect').value;
-        localStorage.setItem('s_key', key);
-        localStorage.setItem('s_model', model);
-        document.getElementById('settingsModal').style.display = 'none';
+        const k = document.getElementById('apiKey').value;
+        const m = document.getElementById('modelSelect').value;
+        localStorage.setItem('simbiot_key', k);
+        localStorage.setItem('simbiot_model', m);
+        closeSettings();
         speak("Ayarlar kaydedildi.");
     }
 
-    // --- SESLER VE MODELLER ---
-    window.onload = () => {
-        const k = localStorage.getItem('s_key');
-        if(k) document.getElementById('apiKey').value = k;
-        loadVoices();
-    };
+    // --- GOOGLE MODELLERİ ÇEKME ---
+    async function fetchModels() {
+        const k = document.getElementById('apiKey').value;
+        if(!k) return alert("API Key girin!");
+        try {
+            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${k}`);
+            const d = await r.json();
+            const s = document.getElementById('modelSelect'); s.innerHTML="";
+            d.models.filter(x=>x.name.includes('gemini')).forEach(x=>{
+                const o=document.createElement('option');
+                o.value=x.name.replace('models/',''); o.text=x.displayName; s.add(o);
+            });
+            alert("Modeller yüklendi!");
+        } catch(e) { alert("Hata! Key'i kontrol et."); }
+    }
 
+    // --- SES SENTEZİ ---
     const synth = window.speechSynthesis;
     function loadVoices() {
         const v = synth.getVoices();
         document.getElementById('voiceSelect').innerHTML = v.map((x,i)=>`<option value="${i}">${x.name}</option>`);
-        const tr = v.findIndex(x => x.lang.includes('tr'));
+        const tr = v.findIndex(x=>x.lang.includes('tr'));
         if(tr>-1) document.getElementById('voiceSelect').value=tr;
     }
     if(speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=loadVoices;
-
-    async function fetchModels() {
-        const key = document.getElementById('apiKey').value;
-        try {
-            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-            const d = await r.json();
-            const s = document.getElementById('modelSelect'); s.innerHTML="";
-            d.models.filter(m=>m.name.includes('gemini')).forEach(m=>{
-                const o=document.createElement('option'); o.value=m.name.replace('models/',''); o.text=m.displayName; s.add(o);
-            });
-            alert("Modeller yüklendi!");
-        } catch(e){alert("Hata!");}
-    }
 
     function speak(t) {
         const u = new SpeechSynthesisUtterance(t);
@@ -212,27 +332,22 @@
         synth.speak(u);
     }
 
-    function addMsg(t, type) {
-        const d=document.createElement('div'); d.className=`msg ${type}`; d.innerText=t;
-        const c=document.getElementById('chat'); c.appendChild(d); c.scrollTop=c.scrollHeight;
-    }
-
-    // --- GEMINI ---
+    // --- GEMINI AI ---
     async function askGemini(text) {
-        const key = localStorage.getItem('s_key');
-        let model = localStorage.getItem('s_model') || 'gemini-1.5-flash';
+        const k = localStorage.getItem('simbiot_key');
+        const m = localStorage.getItem('simbiot_model') || 'gemini-1.5-flash';
         
-        const prompt = `Sen asistan Simbiot. Kısa cevap ver. Sayıları algıla.
-        KOMUTLARI PARANTEZE EKLE: [VOL_UP_X], [CH_UP], [CH_DN], [CH_X], [POWER_TV], [POWER_SB], [MUTE], [NETFLIX], [YOUTUBE]
+        const prompt = `Asistan Simbiot. Kısa cevap. Sayıları algıla.
+        KOMUTLARI EKLE: [VOL_UP_X], [CH_UP], [CH_DN], [CH_X], [POWER_TV], [POWER_SB], [MUTE], [NETFLIX], [YOUTUBE], [WEB]
         Kullanıcı: ${text}`;
 
         try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${k}`, {
                 method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
             });
-            const d = await res.json();
+            const d = await r.json();
             return d.candidates[0].content.parts[0].text;
-        } catch(e){return "Hata";}
+        } catch(e){return "Bağlantı hatası";}
     }
 
     // --- MİKROFON ---
@@ -240,17 +355,26 @@
     rec.lang='tr-TR';
     const mBtn = document.getElementById('micBtn');
 
-    mBtn.onclick=()=>rec.start();
-    rec.onstart=()=>mBtn.classList.add('listening');
-    rec.onend=()=>mBtn.classList.remove('listening');
-    rec.onresult=async(e)=>{
+    mBtn.onclick = () => rec.start();
+    rec.onstart = () => mBtn.classList.add('listening');
+    rec.onend = () => mBtn.classList.remove('listening');
+    
+    rec.onresult = async(e) => {
         const t = e.results[0][0].transcript;
-        addMsg(t,'user');
+        addMsg(t, 'user');
+        
         const resp = await askGemini(t);
         const cmd = resp.match(/\[(.*?)\]/);
         const clean = resp.replace(/\[.*?\]/g,"").trim();
-        addMsg(clean,'ai'); speak(clean);
+        
+        addMsg(clean, 'ai');
+        speak(clean);
         if(cmd) send(cmd[1]);
+    }
+
+    function addMsg(t, type) {
+        const d = document.createElement('div'); d.className = `msg ${type}`; d.innerText = t;
+        const c = document.getElementById('chat-area'); c.appendChild(d); c.scrollTop = c.scrollHeight;
     }
 </script>
 </body>
